@@ -1,0 +1,381 @@
+:root {
+  --ink: #1b1b1b;
+  --dim: #8a8a8a;
+  --rule: #dcdcd6;
+  --paper: #fbfbf8;
+  --mark: #efece0;
+  --plain: #9a5b1f;
+  --key: #2f5f9f;
+  --cipher: #2f6f4f;
+  --plain-soft: #f3e3d2;
+  --key-soft: #dde7f3;
+  --cipher-soft: #dfeae3;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  padding: 22px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.wrap {
+  max-width: 1000px;
+}
+
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 6px;
+}
+
+/* cipher selector */
+.picks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(216px, 1fr));
+  gap: 6px;
+}
+.picks button {
+  text-align: left;
+  font-size: 12px;
+  padding: 6px 9px;
+  line-height: 1.3;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  color: var(--ink);
+  cursor: pointer;
+  font-family: inherit;
+}
+.picks button:hover {
+  background: var(--mark);
+}
+.picks button .sub {
+  display: block;
+  color: var(--dim);
+  font-size: 10px;
+  margin-top: 1px;
+}
+.picks button.on {
+  background: var(--cipher);
+  border-color: var(--cipher);
+  color: #fff;
+}
+.picks button.on .sub {
+  color: #cfe3d6;
+}
+
+/* message + key, then the composing row */
+.fields {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin-top: 18px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.field .eyebrow {
+  margin: 0;
+}
+.fields input {
+  font: inherit;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 5px 8px;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: #fff;
+  color: var(--ink);
+  width: 30ch;
+}
+.f-plain input {
+  border-color: var(--plain);
+}
+.f-key input {
+  border-color: var(--key);
+}
+
+.compose-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.compose-row button {
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 10px;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.compose-row button:hover {
+  background: var(--mark);
+}
+#compose.on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+.compose-row .tip {
+  color: var(--dim);
+  font-size: 11px;
+}
+
+/* result */
+.result {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+}
+.rname {
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+.rname .formula {
+  color: var(--dim);
+}
+.stream {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+.stream > span {
+  width: 9ch;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  flex: none;
+}
+.stream code {
+  font-size: 14px;
+  word-break: break-all;
+  letter-spacing: 1px;
+}
+.stream code b {
+  font-weight: 400;
+  padding: 1px 2px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.stream code b.cur {
+  color: #fff;
+  font-weight: 700;
+}
+.f-plain > .eyebrow,
+.s-plain > span {
+  color: var(--plain);
+}
+.f-key > .eyebrow,
+.s-key > span {
+  color: var(--key);
+}
+.s-cipher > span {
+  color: var(--cipher);
+}
+.s-plain code b.cur {
+  background: var(--plain);
+}
+.s-key code b.cur {
+  background: var(--key);
+}
+.s-cipher code b.cur {
+  background: var(--cipher);
+}
+.rnote {
+  color: var(--dim);
+  font-size: 11px;
+  margin-top: 10px;
+  max-width: 74ch;
+  line-height: 1.55;
+}
+
+.readout {
+  margin: 18px 0 6px;
+  font-size: 14px;
+  min-height: 1.6em;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.readout .hint {
+  color: var(--dim);
+  font-size: 12px;
+}
+.readout .p {
+  color: var(--plain);
+  font-weight: 700;
+}
+.readout .k {
+  color: var(--key);
+  font-weight: 700;
+}
+.readout .c {
+  color: var(--cipher);
+  font-weight: 700;
+}
+.readout .op {
+  color: var(--dim);
+  font-size: 12px;
+}
+.readout .add {
+  color: var(--ink);
+  font-size: 12px;
+  border-left: 1px solid var(--rule);
+  padding-left: 9px;
+}
+
+/* the table */
+.scroll {
+  overflow: auto;
+  border: 1px solid var(--rule);
+  background: #fff;
+  display: inline-block;
+  max-width: 100%;
+}
+table {
+  border-collapse: collapse;
+}
+td,
+th {
+  width: 22px;
+  height: 22px;
+  text-align: center;
+  font-weight: 400;
+  font-size: 11px;
+  padding: 0;
+  line-height: 22px;
+  position: relative;
+}
+th {
+  position: sticky;
+  background: #fff;
+  z-index: 1;
+  color: var(--dim);
+  font-weight: 400;
+}
+thead th {
+  top: 0;
+  border-bottom: 1px solid var(--rule);
+}
+tbody th {
+  left: 0;
+  border-right: 1px solid var(--rule);
+  z-index: 2;
+}
+thead th:first-child {
+  left: 0;
+  z-index: 3;
+}
+
+th.use-p {
+  background: var(--plain-soft);
+  color: var(--plain);
+  font-weight: 700;
+}
+th.use-k {
+  background: var(--key-soft);
+  color: var(--key);
+  font-weight: 700;
+}
+th.use-c {
+  background: var(--cipher-soft);
+  color: var(--cipher);
+  font-weight: 700;
+}
+th.at.p {
+  background: var(--plain);
+  color: #fff;
+  font-weight: 700;
+}
+th.at.k {
+  background: var(--key);
+  color: #fff;
+  font-weight: 700;
+}
+th.at.c {
+  background: var(--cipher);
+  color: #fff;
+  font-weight: 700;
+}
+th.next {
+  background: var(--ink);
+  color: #fff;
+  font-weight: 700;
+}
+
+td.used {
+  background: var(--cipher-soft);
+  color: var(--cipher);
+  font-weight: 700;
+}
+td.used::after {
+  content: attr(data-n);
+  position: absolute;
+  top: -1px;
+  right: 1px;
+  font-size: 7px;
+  color: var(--dim);
+  line-height: 1;
+}
+td.trail {
+  background: #f5f2e7;
+}
+td.cross {
+  background: var(--mark);
+}
+td.at {
+  background: var(--cipher);
+  color: #fff;
+  font-weight: 700;
+}
+td.at::after {
+  color: #cfe3d6;
+}
+body.composing td {
+  cursor: pointer;
+}
+body.composing td:hover {
+  outline: 1px solid var(--ink);
+  outline-offset: -1px;
+}
+
+.legend {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--dim);
+  margin-top: 10px;
+}
+.legend b {
+  font-weight: 400;
+}
+.legend .p b {
+  color: var(--plain);
+}
+.legend .k b {
+  color: var(--key);
+}
+.legend .c b {
+  color: var(--cipher);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tabula recta</title>
+    <meta
+      name="description"
+      content="One tabula recta, eight classical ciphers. Pick a cipher and the table marks the squares your message walks through, or compose a message by clicking squares."
+    />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#fbfbf8" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Tabula recta" />
+    <meta
+      property="og:description"
+      content="One tabula recta, eight classical ciphers, marked up square by square."
+    />
+    <meta name="twitter:card" content="summary" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="eyebrow">Cipher</div>
+      <div class="picks" id="picks"></div>
+
+      <div class="fields">
+        <div class="field f-plain">
+          <div class="eyebrow">Message</div>
+          <input id="msg" value="ATTACKATDAWN" spellcheck="false" aria-label="Message" />
+        </div>
+        <div class="field f-key">
+          <div class="eyebrow">Key</div>
+          <input id="key" value="LEMON" spellcheck="false" aria-label="Key" />
+        </div>
+      </div>
+
+      <div class="compose-row">
+        <button id="clear">Clear both</button>
+        <button id="compose">Compose by clicking: off</button>
+        <button id="undo" hidden>Undo last</button>
+        <span class="tip" id="tip"></span>
+      </div>
+
+      <div class="result">
+        <div class="rname" id="rname">Pick a cipher to mark up the table</div>
+        <div class="stream s-plain"><span>message</span><code id="rplain"></code></div>
+        <div class="stream s-key"><span>key</span><code id="rkey"></code></div>
+        <div class="stream s-cipher"><span>cipher</span><code id="rcipher"></code></div>
+        <div class="rnote" id="rnote"></div>
+      </div>
+
+      <div class="readout" id="readout">
+        <span class="hint"
+          >Hover a square, or a letter in the lines above, to read off its working.</span
+        >
+      </div>
+
+      <div class="scroll"><table id="grid"></table></div>
+      <div class="legend" id="legend"></div>
+    </div>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
