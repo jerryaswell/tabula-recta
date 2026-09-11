@@ -1,0 +1,129 @@
+import { test, expect } from '@playwright/test';
+
+/** message ATTACKATDAWN under each cipher, with the key the test types in. */
+const WORKED = [
+  { name: 'Trithemius progressive', key: '', cipher: 'AUVDGPGALJGY' },
+  { name: 'Repeating keyword', key: 'LEMON', cipher: 'LXFOPVEFRNHR' },
+  { name: 'Plaintext autokey', key: 'LEMON', cipher: 'LXFOPKTMDCGN' },
+  { name: 'Ciphertext autokey', key: 'LEMON', cipher: 'LXFOPVXYRPRK' },
+  { name: 'Beaufort', key: 'LEMON', cipher: 'LLTOLBETLNPR' },
+  { name: 'Variant Beaufort', key: 'LEMON', cipher: 'PPHMPZWHPNLJ' },
+  { name: 'Gronsfeld', key: '31415', cipher: 'DUXBHNBXEFZO' },
+  { name: 'Running key', key: 'LEMON', cipher: 'LXFOPVEFRNHR' },
+];
+
+test.beforeEach(async ({ page }) => {
+  await page.goto('/');
+});
+
+test('the table is drawn in full', async ({ page }) => {
+  await expect(page).toHaveTitle('Tabula recta');
+  await expect(page.locator('#grid tbody tr')).toHaveCount(26);
+  await expect(page.locator('#grid tbody td')).toHaveCount(26 * 26);
+  await expect(page.locator('#grid td[data-r="0"][data-c="0"]')).toHaveText('A');
+  await expect(page.locator('#grid td[data-r="25"][data-c="25"]')).toHaveText('Y');
+  await expect(page.locator('#picks button')).toHaveCount(WORKED.length);
+});
+
+WORKED.forEach(({ name, key, cipher }, i) => {
+  test(`${name} enciphers the worked example`, async ({ page }) => {
+    const pick = page.locator('#picks button').nth(i);
+    await expect(pick).toContainText(name);
+    await page.fill('#key', key);
+    await pick.click();
+    await expect(page.locator('#rcipher')).toHaveText(cipher);
+    await expect(page.locator('#rplain')).toHaveText('ATTACKATDAWN');
+    await expect(page.locator('#rnote')).not.toBeEmpty();
+    await expect(page.locator('#grid td.used').first()).toBeVisible();
+  });
+});
+
+test('picking a cipher twice puts the table back', async ({ page }) => {
+  const pick = page.getByRole('button', { name: 'Repeating keyword' });
+  await pick.click();
+  await expect(page.locator('#grid td.used').first()).toBeVisible();
+  await pick.click();
+  await expect(page.locator('#grid td.used')).toHaveCount(0);
+  await expect(page.locator('#rname')).toHaveText('Pick a cipher to mark up the table');
+});
+
+test('editing the message re-runs the cipher', async ({ page }) => {
+  await page.getByRole('button', { name: 'Repeating keyword' }).click();
+  await page.fill('#msg', 'MEETMEATMIDNIGHT');
+  await expect(page.locator('#rcipher')).toHaveText('XIQHZPEFAVORUUUE');
+  await page.fill('#msg', '');
+  await expect(page.locator('#rname')).toContainText('enter a message');
+});
+
+test('hovering a square reads off its working', async ({ page }) => {
+  await page.getByRole('button', { name: 'Repeating keyword' }).click();
+  await page.locator('#grid td[data-r="11"][data-c="0"]').hover();
+  const readout = page.locator('#readout');
+  await expect(readout).toContainText('message');
+  await expect(readout).toContainText('key');
+  await expect(readout).toContainText('letter 1 of the message');
+  await expect(page.locator('#grid td.at')).toHaveCount(1);
+});
+
+test('hovering a letter of the message lights its square, and every repeat of it', async ({
+  page,
+}) => {
+  await page.getByRole('button', { name: 'Repeating keyword' }).click();
+  // T over key M is the third letter of ATTACKATDAWN, and the eighth as well
+  await page.locator('#rplain b').nth(2).hover();
+  await expect(page.locator('#grid td.at')).toHaveCount(1);
+  await expect(page.locator('#rcipher b.cur')).toHaveText(['F', 'F']);
+  await expect(page.locator('#readout')).toContainText('letters 3, 8 of the message');
+  await expect(page.locator('#grid td.at')).toHaveAttribute('data-n', '3,8');
+});
+
+test('composing by clicking builds the message and the key', async ({ page }) => {
+  await page.fill('#msg', '');
+  await page.fill('#key', '');
+  await page.getByRole('button', { name: 'Repeating keyword' }).click();
+  await page.getByRole('button', { name: 'Compose by clicking: off' }).click();
+  await expect(page.locator('body')).toHaveClass(/composing/);
+
+  await page.locator('#grid td[data-r="11"][data-c="0"]').click(); // key L, message A
+  await page.locator('#grid td[data-r="4"][data-c="19"]').click(); // key E, message T
+  await expect(page.locator('#msg')).toHaveValue('AT');
+  await expect(page.locator('#key')).toHaveValue('LE');
+  await expect(page.locator('#rcipher')).toHaveText('LX');
+
+  await page.getByRole('button', { name: 'Undo last' }).click();
+  await expect(page.locator('#msg')).toHaveValue('A');
+  await expect(page.locator('#key')).toHaveValue('L');
+});
+
+test('a derived cipher marks the row the next letter must land on', async ({ page }) => {
+  await page.fill('#msg', '');
+  await page.getByRole('button', { name: 'Plaintext autokey' }).click();
+  await page.getByRole('button', { name: 'Compose by clicking: off' }).click();
+  await expect(page.locator('#grid th.next')).toHaveCount(1);
+  await expect(page.locator('#grid th.next')).toHaveText('L'); // the seed key LEMON starts here
+  await expect(page.locator('#tip')).toContainText('the key is generated');
+});
+
+test('clearing both fields drops into composing', async ({ page }) => {
+  await page.getByRole('button', { name: 'Repeating keyword' }).click();
+  await page.getByRole('button', { name: 'Clear both' }).click();
+  await expect(page.locator('#msg')).toHaveValue('');
+  await expect(page.locator('#key')).toHaveValue('');
+  await expect(page.locator('body')).toHaveClass(/composing/);
+  await expect(page.locator('#rname')).toContainText('enter a message');
+});
+
+test('the page loads nothing from the network but itself', async ({ page }) => {
+  const requests = [];
+  page.on('request', (r) => requests.push(r.url()));
+  await page.goto('/');
+  await expect(page.locator('#grid tbody tr')).toHaveCount(26);
+  const extra = requests.filter((url) => !url.endsWith('/') && !url.endsWith('favicon.svg'));
+  expect(extra).toEqual([]);
+});
+
+test('the 404 page points back at the table', async ({ page }) => {
+  const response = await page.goto('/nowhere');
+  expect(response.status()).toBe(404);
+  await expect(page.getByRole('link', { name: 'the front page' })).toBeVisible();
+});
