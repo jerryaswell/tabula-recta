@@ -343,6 +343,12 @@ td.at {
   color: #fff;
   font-weight: 700;
 }
+/* the hover crossing is a passing state; a marked square outranks it and keeps
+   its fill, or the path being read breaks up under the pointer reading it */
+td.used.trail,
+td.used.cross {
+  background: var(--cipher-soft);
+}
 td.at::after {
   color: #cfe3d6;
 }
@@ -352,6 +358,29 @@ body.composing td {
 body.composing td:hover {
   outline: 1px solid var(--ink);
   outline-offset: -1px;
+}
+
+/* which letter sits in the square changes with the cipher, so the fill follows
+   the role rather than always standing for the ciphertext */
+#grid.cell-p td.used,
+#grid.cell-p td.used.trail,
+#grid.cell-p td.used.cross {
+  background: var(--plain-soft);
+  color: var(--plain);
+}
+#grid.cell-k td.used,
+#grid.cell-k td.used.trail,
+#grid.cell-k td.used.cross {
+  background: var(--key-soft);
+  color: var(--key);
+}
+#grid.cell-p td.at {
+  background: var(--plain);
+  color: #fff;
+}
+#grid.cell-k td.at {
+  background: var(--key);
+  color: #fff;
 }
 
 .legend {

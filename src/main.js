@@ -38,8 +38,10 @@ function build() {
 }
 
 function mark() {
+  table.classList.remove('cell-p', 'cell-k', 'cell-c');
   if (!RUN) return;
-  const [rowRole, colRole] = RUN.spec.roles;
+  const [rowRole, colRole, cellRole] = RUN.spec.roles;
+  table.classList.add('cell-' + ROLE_LETTER[cellRole]);
   const seen = new Map();
 
   RUN.steps.forEach((st, n) => {

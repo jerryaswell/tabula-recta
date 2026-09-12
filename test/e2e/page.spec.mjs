@@ -127,3 +127,31 @@ test('the 404 page points back at the table', async ({ page }) => {
   expect(response.status()).toBe(404);
   await expect(page.getByRole('link', { name: 'the front page' })).toBeVisible();
 });
+
+test('a marked square keeps its fill when the hover crossing runs over it', async ({ page }) => {
+  await page.getByRole('button', { name: 'Repeating keyword' }).click();
+  await page.locator('#grid td[data-r="11"][data-c="0"]').hover();
+  const fills = await page.evaluate(() =>
+    [...document.querySelectorAll('#grid td.used.trail, #grid td.used.cross')].map(
+      (el) => getComputedStyle(el).backgroundColor
+    )
+  );
+  expect(fills.length).toBeGreaterThan(0);
+  expect([...new Set(fills)]).toEqual(['rgb(223, 234, 227)']); // --cipher-soft, not the trail tint
+});
+
+test('the shaded squares are the colour the legend says they are', async ({ page }) => {
+  // the square holds a different one of the three letters depending on the cipher
+  const cases = [
+    { name: 'Repeating keyword', role: 'cipher', fill: 'rgb(223, 234, 227)' },
+    { name: 'Beaufort', role: 'key', fill: 'rgb(221, 231, 243)' },
+    { name: 'Variant Beaufort', role: 'message', fill: 'rgb(243, 227, 210)' },
+  ];
+  for (const { name, role, fill } of cases) {
+    await page.locator('#picks button').filter({ hasText: name }).first().click();
+    await expect(page.locator('#legend')).toContainText('shaded squares: ' + role);
+    const used = page.locator('#grid td.used').first();
+    await expect(used).toHaveCSS('background-color', fill);
+    await page.locator('#picks button').filter({ hasText: name }).first().click(); // deselect
+  }
+});
