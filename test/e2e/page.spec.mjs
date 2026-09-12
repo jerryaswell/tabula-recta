@@ -218,3 +218,24 @@ test('clicking the same square twice adds the same letter twice', async ({ page 
   await expect(page.locator('#msg')).toHaveValue('AAA');
   await expect(page.locator('#key')).toHaveValue('LLL');
 });
+
+test('the squares stay square, and the headers stay put', async ({ page }) => {
+  await page.setViewportSize({ width: 380, height: 700 });
+  const cell = await page.locator('#grid td').first().boundingBox();
+  expect(Math.round(cell.width)).toBe(22); // not squeezed to fit a narrow window
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
+    await page.evaluate(() => document.documentElement.clientWidth)
+  );
+
+  await page.setViewportSize({ width: 1280, height: 700 });
+  await page.getByRole('button', { name: 'Repeating keyword' }).click();
+  const pinned = await page.evaluate(() => {
+    const pane = document.querySelector('.scroll');
+    pane.scrollTop = 300;
+    const top = pane.getBoundingClientRect().top;
+    return Math.round(
+      document.querySelector('thead th[data-hc="5"]').getBoundingClientRect().top - top
+    );
+  });
+  expect(pinned).toBeLessThanOrEqual(2); // the alphabet stays at the top of the pane
+});

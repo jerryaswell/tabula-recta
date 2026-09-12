@@ -261,15 +261,43 @@ body.composing .readout {
 }
 
 /* the table */
+/* the pane is the scrollport, not the page: that is what makes the sticky row
+   and column headers stick, and it keeps the squares square instead of letting
+   a narrow window squeeze them. The white fades sit on the content and the
+   shadows on the frame, so an edge is shaded only while it hides something. */
 .scroll {
   overflow: auto;
   border: 1px solid var(--rule);
-  background: #fff;
-  display: inline-block;
+  display: block;
+  width: fit-content;
   max-width: 100%;
+  max-height: min(74vh, 648px);
+  overscroll-behavior-x: contain;
+  background:
+    linear-gradient(to right, #fff 40%, rgba(255, 255, 255, 0)) left / 24px 100% no-repeat,
+    linear-gradient(to left, #fff 40%, rgba(255, 255, 255, 0)) right / 24px 100% no-repeat,
+    radial-gradient(farthest-side at 0 50%, rgba(27, 27, 27, 0.14), transparent) left / 9px 100%
+      no-repeat,
+    radial-gradient(farthest-side at 100% 50%, rgba(27, 27, 27, 0.14), transparent) right / 9px 100%
+      no-repeat,
+    #fff;
+  background-attachment: local, local, scroll, scroll;
 }
 table {
   border-collapse: collapse;
+}
+td,
+th {
+  min-width: 22px;
+}
+/* while every square is a click target, they are targets at the size the
+   guidelines ask for; the reading view keeps its own density */
+body.composing td,
+body.composing th {
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  line-height: 24px;
 }
 td,
 th {
