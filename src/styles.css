@@ -1,10 +1,13 @@
 :root {
   --ink: #1b1b1b;
-  --dim: #8a8a8a;
+  --dim: #6f6f6f;
   --rule: #dcdcd6;
+  /* hairlines on paper stay pale; a control's edge has to be seen */
+  --edge: #8f8f8a;
+  --badge: #5f5f5f;
   --paper: #fbfbf8;
   --mark: #efece0;
-  --plain: #9a5b1f;
+  --plain: #8a4f18;
   --key: #2f5f9f;
   --cipher: #2f6f4f;
   --plain-soft: #f3e3d2;
@@ -47,7 +50,7 @@ body {
   padding: 6px 9px;
   line-height: 1.3;
   background: #fff;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--edge);
   border-radius: 3px;
   color: var(--ink);
   cursor: pointer;
@@ -68,7 +71,7 @@ body {
   color: #fff;
 }
 .picks button.on .sub {
-  color: #cfe3d6;
+  color: #e6f2ea;
 }
 
 /* message + key, then the composing row */
@@ -117,7 +120,7 @@ body {
   font-size: 12px;
   padding: 4px 10px;
   background: #fff;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--edge);
   border-radius: 3px;
   color: var(--ink);
   cursor: pointer;
@@ -377,8 +380,8 @@ td.used::after {
   position: absolute;
   top: -1px;
   right: 1px;
-  font-size: 7px;
-  color: var(--dim);
+  font-size: 8px;
+  color: var(--badge);
   line-height: 1;
 }
 td.trail {
@@ -399,7 +402,7 @@ td.used.cross {
   background: var(--cipher-soft);
 }
 td.at::after {
-  color: #cfe3d6;
+  color: #e6f2ea;
 }
 body.composing td {
   cursor: pointer;
@@ -476,5 +479,15 @@ body.composing td:hover {
   }
   .rnote {
     min-height: 9.3em;
+  }
+}
+
+/* someone who has asked for more contrast gets it */
+@media (prefers-contrast: more) {
+  :root {
+    --dim: #4a4a4a;
+    --rule: #9a9a94;
+    --edge: #6a6a66;
+    --badge: #3d3d3d;
   }
 }
