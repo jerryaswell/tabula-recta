@@ -5,7 +5,7 @@ message walks through — numbered in order, with the row and column headers col
 each letter plays. Hover a square to read off its working, or turn on composing and write a
 message by clicking squares instead of typing.
 
-**Live site:** https://jerryaswell.github.io/tabula-recta/
+**Live site:** https://tabula-recta.com/
 
 [![Deploy](https://github.com/jerryaswell/tabula-recta/actions/workflows/deploy.yml/badge.svg)](https://github.com/jerryaswell/tabula-recta/actions/workflows/deploy.yml)
 [![CI](https://github.com/jerryaswell/tabula-recta/actions/workflows/ci.yml/badge.svg)](https://github.com/jerryaswell/tabula-recta/actions/workflows/ci.yml)

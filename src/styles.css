@@ -420,11 +420,17 @@ td.used::after {
   color: var(--badge);
   line-height: 1;
 }
+/* the trail is the reading gesture, read across then down; the cross is only
+   orientation. They were a sixteenth of a step apart — the same beige L. The
+   trail is warmer and carries a hairline along the path it marks. */
 td.trail {
-  background: #f5f2e7;
+  background: #efe4cf;
+}
+td.trail:not(.used) {
+  box-shadow: inset 0 -1px 0 rgba(138, 79, 24, 0.22);
 }
 td.cross {
-  background: var(--mark);
+  background: #f7f5f0;
 }
 td.at {
   background: var(--cipher);
