@@ -4,13 +4,23 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Not found · Tabula recta</title>
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#fbfbf8" />
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
     <style>
+      /* the tokens are copied rather than shared: this page is served on its own,
+         so the duplication is literal, and obvious when it drifts */
+      :root {
+        --ink: #1b1b1b;
+        --dim: #6f6f6f;
+        --paper: #fbfbf8;
+        --key: #2f5f9f;
+      }
       body {
         margin: 0;
         padding: 22px;
-        background: #fbfbf8;
-        color: #1b1b1b;
+        background: var(--paper);
+        color: var(--ink);
         font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
         font-size: 14px;
         line-height: 1.5;
@@ -19,19 +29,31 @@
         font-size: 10px;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: #8a8a8a;
+        color: var(--dim);
         margin-bottom: 6px;
+      }
+      h1 {
+        font: 700 16px/1.3 inherit;
+        letter-spacing: 0.01em;
+        margin: 0 0 5px;
       }
       p {
         max-width: 60ch;
       }
       a {
-        color: #2f5f9f;
+        color: var(--key);
+      }
+      :focus-visible {
+        outline: 2px solid var(--ink);
+        outline-offset: 1px;
       }
     </style>
   </head>
   <body>
-    <div class="eyebrow">404</div>
-    <p>No square here. The table is back at <a href="./">the front page</a>.</p>
+    <main>
+      <div class="eyebrow">404</div>
+      <h1>Tabula recta</h1>
+      <p>No square here. The table is back at <a href="./">the front page</a>.</p>
+    </main>
   </body>
 </html>

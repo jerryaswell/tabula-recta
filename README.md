@@ -44,8 +44,12 @@ Tests:
 ```sh
 npm run test:unit  # the cipher logic and the build output, via node --test
 npm run test:e2e   # the built page driven in Chromium, via Playwright
+npm run test:a11y  # just the axe-core audit, part of test:e2e
 npm test           # both
 ```
+
+The browser suite includes an axe-core audit of the page cold, with a cipher marked up, while
+composing, and of the 404 — held to WCAG 2.2 A and AA.
 
 `npm run test:e2e` builds the site and serves `dist/` itself, so it always runs against the real
 output rather than the sources. First run needs a browser: `npx playwright install chromium`.
