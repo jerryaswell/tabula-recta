@@ -21,4 +21,11 @@ export default defineConfig([
       globals: globals.node,
     },
   },
+  {
+    // browser tests run their own callbacks inside the page, via page.evaluate
+    files: ['test/e2e/**/*.mjs'],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.browser },
+    },
+  },
 ]);

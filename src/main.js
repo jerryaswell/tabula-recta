@@ -128,6 +128,19 @@ function light(r, c, hits) {
   const sign = RUN.spec.op === 'add' ? '+' : '−';
   const order = RUN.spec.op === 'sub-pk' ? ['key', 'plain'] : ['plain', 'key'];
 
+  /* what a click here would do — said before the click, so a row a Gronsfeld key
+     cannot reach says so while the pointer is on it rather than after */
+  const composeAdd = (v) =>
+    RUN.spec.digits && v.key > 9
+      ? '<span class="add">no digit for this row — a Gronsfeld key stops at 9</span>'
+      : '<span class="add">click to add <span class="p">' +
+        chr(v.plain) +
+        '</span>' +
+        (DERIVED.includes(RUN.spec.id)
+          ? ' (key follows on its own)'
+          : ' and <span class="k">' + (RUN.spec.digits ? v.key : chr(v.key)) + '</span>') +
+        '</span>';
+
   readout.innerHTML =
     say(order[0]) +
     '<span class="op">' +
@@ -143,15 +156,7 @@ function light(r, c, hits) {
         ' of the message'
       : 'not a step in this message — what the table would give for this pair') +
     '</span>' +
-    (COMPOSE
-      ? '<span class="add">click to add <span class="p">' +
-        chr(val.plain) +
-        '</span>' +
-        (DERIVED.includes(RUN.spec.id)
-          ? ' (key follows on its own)'
-          : ' and <span class="k">' + (RUN.spec.digits ? val.key : chr(val.key)) + '</span>') +
-        '</span>'
-      : '');
+    (COMPOSE ? composeAdd(val) : '');
 
   hits.forEach((n) => {
     rplain.children[n]?.classList.add('cur');

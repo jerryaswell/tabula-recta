@@ -166,3 +166,18 @@ test('the shaded squares are the colour the legend says they are', async ({ page
     await page.locator('#picks button').filter({ hasText: name }).first().click(); // deselect
   }
 });
+
+test('Gronsfeld says which rows it cannot key before you click them', async ({ page }) => {
+  await page.fill('#key', '31415');
+  await page.getByRole('button', { name: 'Gronsfeld' }).click();
+  await page.getByRole('button', { name: 'Compose by clicking: off' }).click();
+
+  await page.locator('#grid td[data-r="3"][data-c="0"]').hover(); // row D: digit 3, reachable
+  await expect(page.locator('#readout .add')).toContainText('click to add');
+
+  await page.locator('#grid td[data-r="14"][data-c="0"]').hover(); // row O: digit 14, out of reach
+  await expect(page.locator('#readout .add')).toContainText('a Gronsfeld key stops at 9');
+  // the working for the square is still there to read
+  await expect(page.locator('#readout')).toContainText('message');
+  await expect(page.locator('#readout')).toContainText('key');
+});
