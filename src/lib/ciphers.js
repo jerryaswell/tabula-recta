@@ -12,7 +12,7 @@ export const CIPHERS = [
   {
     id: 'trithemius',
     name: 'Trithemius progressive',
-    sub: 'Polygraphia, 1508 — no key',
+    sub: 'Polygraphia, 1518 — no key',
     op: 'add',
     roles: ['key', 'plain', 'cipher'],
     formula: 'message + key',
@@ -27,7 +27,7 @@ export const CIPHERS = [
     op: 'add',
     roles: ['key', 'plain', 'cipher'],
     formula: 'message + key',
-    note: "Bellaso added the repeating countersign that later took Vigenère's name. Only as many rows as the keyword has letters are ever used — visible at a glance on the side of the table — and that regularity is what Kasiski exploited in 1863.",
+    note: "Bellaso added the repeating countersign that later took Vigenère's name. Only as many rows as the keyword has letters are ever used — visible at a glance on the side of the table — and that regularity is what Kasiski published in 1863, a decade after Babbage had quietly done the same and said nothing.",
     stream: (p, k) => p.map((_, i) => k[i % k.length]),
   },
 
@@ -38,7 +38,7 @@ export const CIPHERS = [
     op: 'add',
     roles: ['key', 'plain', 'cipher'],
     formula: 'message + key',
-    note: "Vigenère's real contribution. A short priming key runs first, then the message itself becomes the key, so the marked rows spread across the whole side of the table instead of clustering on a few.",
+    note: "Cardano had the idea first and botched it — plaintext keying itself, with no primer, so the recipient could not read it either. Vigenère's fix was a priming key: one agreed letter for him, a short word here. It runs first, then the message itself becomes the key, and the marked rows spread across the whole side of the table instead of clustering on a few.",
     stream: (p, k) => k.concat(p).slice(0, p.length),
   },
 
@@ -50,13 +50,13 @@ export const CIPHERS = [
     roles: ['key', 'plain', 'cipher'],
     formula: 'message + key',
     running: true,
-    note: 'Same idea, but each ciphertext letter feeds the next key position. It recovers after a garbled letter, which suited noisy channels, but it leaks more structure than the plaintext version.',
+    note: 'Same idea, but each ciphertext letter feeds the next key position. It resynchronises after a garbled letter, which suited noisy channels, and it costs almost everything: past the primer the keystream is the ciphertext, which the attacker already has, so only the short priming key is ever really secret.',
   },
 
   {
     id: 'beaufort',
     name: 'Beaufort',
-    sub: 'Sold as a slide, 1850s',
+    sub: 'Sold as a card, 1857',
     op: 'sub-pk',
     roles: ['cipher', 'plain', 'key'],
     formula: 'key − message',
@@ -78,7 +78,7 @@ export const CIPHERS = [
   {
     id: 'gronsfeld',
     name: 'Gronsfeld',
-    sub: 'Numeric key, 0–9',
+    sub: 'Count Gronsfeld, 1665',
     op: 'add',
     roles: ['key', 'plain', 'cipher'],
     formula: 'message + key',
@@ -94,7 +94,7 @@ export const CIPHERS = [
     op: 'add',
     roles: ['key', 'plain', 'cipher'],
     formula: 'message + key',
-    note: 'The key is a long passage — an agreed page and line — so it never repeats. Type a sentence into the key field and the marked rows scatter across the side of the table. Its weakness is that both edges are then ordinary language.',
+    note: 'The key is a long passage — an agreed page and line — so it never repeats. Give it a five-letter word and it is only the repeating keyword again, square for square; type a sentence in and the marked rows scatter across the whole side of the table. Its weakness is that both edges are then ordinary language.',
     stream: (p, k) => p.map((_, i) => k[i % k.length]),
   },
 ];

@@ -181,7 +181,7 @@ footer a {
   margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid var(--rule);
-  min-height: 188px;
+  min-height: 210px;
 }
 /* three labels with nothing beside them read as a rendering failure */
 .result:has(#rcipher:empty) .stream {
@@ -247,7 +247,7 @@ footer a {
   margin-top: 10px;
   max-width: 74ch;
   line-height: 1.55;
-  min-height: 6.2em;
+  min-height: 8em;
 }
 
 /* the annotation and the compose line always take a row of their own, and the
@@ -509,7 +509,7 @@ body.composing td:hover {
 
 @media (max-width: 560px) {
   .result {
-    min-height: 208px;
+    min-height: 230px;
   }
   .readout {
     min-height: 4.8em;
@@ -521,10 +521,10 @@ body.composing td:hover {
 
 @media (max-width: 430px) {
   .result {
-    min-height: 242px;
+    min-height: 285px;
   }
   .rnote {
-    min-height: 9.3em;
+    min-height: 13em;
   }
 }
 

@@ -18,13 +18,13 @@ sits on which edge, and where the key comes from.
 
 | Cipher                 |                                | Square is     |
 | ---------------------- | ------------------------------ | ------------- |
-| Trithemius progressive | Polygraphia, 1508 — no key     | message + key |
+| Trithemius progressive | Polygraphia, 1518 — no key     | message + key |
 | Repeating keyword      | Bellaso, 1553 — the "Vigenère" | message + key |
 | Plaintext autokey      | Vigenère, 1586                 | message + key |
 | Ciphertext autokey     | weaker autokey variant         | message + key |
-| Beaufort               | sold as a slide, 1850s         | key − message |
+| Beaufort               | sold as a card, 1857           | key − message |
 | Variant Beaufort       | message minus key              | message − key |
-| Gronsfeld              | numeric key, 0–9               | message + key |
+| Gronsfeld              | Count Gronsfeld, 1665          | message + key |
 | Running key            | book or passage as key         | message + key |
 
 ## Working on it
