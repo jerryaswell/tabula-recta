@@ -181,3 +181,40 @@ test('Gronsfeld says which rows it cannot key before you click them', async ({ p
   await expect(page.locator('#readout')).toContainText('message');
   await expect(page.locator('#readout')).toContainText('key');
 });
+
+test('the table does not move while you read across it', async ({ page }) => {
+  const gridTop = () =>
+    page.evaluate(() =>
+      Math.round(document.getElementById('grid').getBoundingClientRect().top + window.scrollY)
+    );
+
+  const cold = await gridTop();
+  const tops = [];
+  for (let i = 0; i < 8; i++) {
+    await page.locator('#picks button').nth(i).click();
+    tops.push(await gridTop());
+    await page.locator('#picks button').nth(i).click();
+  }
+  expect([...new Set(tops)]).toEqual([cold]); // every cipher reserves the same block
+
+  await page.locator('#picks button').nth(1).click();
+  await page.locator('#grid td[data-r="11"][data-c="0"]').hover(); // a marked square
+  const onPath = await gridTop();
+  await page.locator('#grid td[data-r="2"][data-c="3"]').hover(); // an unmarked one, longer annotation
+  expect(await gridTop()).toBe(onPath);
+});
+
+test('clicking the same square twice adds the same letter twice', async ({ page }) => {
+  // the readout used to change height under the pointer, sliding a different
+  // square beneath a stationary cursor between clicks
+  await page.getByRole('button', { name: 'Clear both' }).click();
+  await page.locator('#picks button').nth(1).click();
+  const cell = page.locator('#grid td[data-r="11"][data-c="0"]');
+  await cell.scrollIntoViewIfNeeded(); // mouse.click uses viewport coordinates
+  const box = await cell.boundingBox();
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  for (let i = 0; i < 3; i++) await page.mouse.click(x, y);
+  await expect(page.locator('#msg')).toHaveValue('AAA');
+  await expect(page.locator('#key')).toHaveValue('LLL');
+});

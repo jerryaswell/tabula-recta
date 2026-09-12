@@ -136,10 +136,17 @@ body {
 }
 
 /* result */
+/* the block is reserved at the height of its tallest cipher note, so picking a
+   cipher — or the streams filling on the first click — never moves the table */
 .result {
   margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid var(--rule);
+  min-height: 188px;
+}
+/* three labels with nothing beside them read as a rendering failure */
+.result:has(#rcipher:empty) .stream {
+  display: none;
 }
 .rname {
   font-size: 13px;
@@ -201,16 +208,29 @@ body {
   margin-top: 10px;
   max-width: 74ch;
   line-height: 1.55;
+  min-height: 6.2em;
 }
 
+/* the annotation and the compose line always take a row of their own, and the
+   block reserves them, so crossing from a marked square to an unmarked one
+   cannot shift the table out from under the pointer doing the crossing */
 .readout {
-  margin: 18px 0 6px;
+  margin: 18px 0 8px;
   font-size: 14px;
-  min-height: 1.6em;
+  min-height: 3.2em;
   display: flex;
   align-items: baseline;
+  align-content: flex-start;
   gap: 7px;
+  row-gap: 3px;
   flex-wrap: wrap;
+}
+.readout .hint,
+.readout .add {
+  flex-basis: 100%;
+}
+body.composing .readout {
+  min-height: 5.4em;
 }
 .readout .hint {
   color: var(--dim);
@@ -235,8 +255,9 @@ body {
 .readout .add {
   color: var(--ink);
   font-size: 12px;
-  border-left: 1px solid var(--rule);
-  padding-left: 9px;
+  border-top: 1px solid var(--rule);
+  padding-top: 5px;
+  margin-top: 2px;
 }
 
 /* the table */
@@ -407,4 +428,25 @@ body.composing td:hover {
 :focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 1px;
+}
+
+@media (max-width: 560px) {
+  .result {
+    min-height: 208px;
+  }
+  .readout {
+    min-height: 4.8em;
+  }
+  body.composing .readout {
+    min-height: 7.2em;
+  }
+}
+
+@media (max-width: 430px) {
+  .result {
+    min-height: 242px;
+  }
+  .rnote {
+    min-height: 9.3em;
+  }
 }
