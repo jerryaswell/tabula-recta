@@ -43,21 +43,21 @@
       </div>
 
       <div class="compose-row">
-        <button id="clear">Clear both</button>
-        <button id="compose">Compose by clicking: off</button>
-        <button id="undo" hidden>Undo last</button>
-        <span class="tip" id="tip"></span>
+        <button id="clear" type="button">Clear both</button>
+        <button id="compose" type="button" aria-pressed="false">Compose by clicking</button>
+        <button id="undo" type="button" hidden>Undo last</button>
+        <span class="tip" id="tip" role="status"></span>
       </div>
 
       <div class="result">
-        <div class="rname" id="rname">Pick a cipher to mark up the table</div>
+        <div class="rname" id="rname" role="status">Pick a cipher to mark up the table</div>
         <div class="stream s-plain"><span>message</span><code id="rplain"></code></div>
         <div class="stream s-key"><span>key</span><code id="rkey"></code></div>
         <div class="stream s-cipher"><span>cipher</span><code id="rcipher"></code></div>
-        <div class="rnote" id="rnote"></div>
+        <div class="rnote" id="rnote" aria-live="polite"></div>
       </div>
 
-      <div class="readout" id="readout">
+      <div class="readout" id="readout" role="status" aria-atomic="true">
         <span class="hint"
           >Hover a square, or a letter in the lines above, to read off its working.</span
         >

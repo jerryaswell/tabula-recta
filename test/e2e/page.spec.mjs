@@ -81,7 +81,7 @@ test('composing by clicking builds the message and the key', async ({ page }) =>
   await page.fill('#msg', '');
   await page.fill('#key', '');
   await page.getByRole('button', { name: 'Repeating keyword' }).click();
-  await page.getByRole('button', { name: 'Compose by clicking: off' }).click();
+  await page.getByRole('button', { name: 'Compose by clicking' }).click();
   await expect(page.locator('body')).toHaveClass(/composing/);
 
   await page.locator('#grid td[data-r="11"][data-c="0"]').click(); // key L, message A
@@ -98,7 +98,7 @@ test('composing by clicking builds the message and the key', async ({ page }) =>
 test('a derived cipher marks the row the next letter must land on', async ({ page }) => {
   await page.fill('#msg', '');
   await page.getByRole('button', { name: 'Plaintext autokey' }).click();
-  await page.getByRole('button', { name: 'Compose by clicking: off' }).click();
+  await page.getByRole('button', { name: 'Compose by clicking' }).click();
   await expect(page.locator('#grid th.next')).toHaveCount(1);
   await expect(page.locator('#grid th.next')).toHaveText('L'); // the seed key LEMON starts here
   await expect(page.locator('#tip')).toContainText('the key is generated');
@@ -118,7 +118,7 @@ test('turning composing on re-reads the result line, not just the table', async 
   await page.getByRole('button', { name: 'Repeating keyword' }).click();
   await page.fill('#msg', '');
   await expect(page.locator('#rname')).toContainText('enter a message');
-  await page.getByRole('button', { name: 'Compose by clicking: off' }).click();
+  await page.getByRole('button', { name: 'Compose by clicking' }).click();
   // the instruction must agree with the tip below it
   await expect(page.locator('#rname')).toContainText('click squares to build the message');
   await expect(page.locator('#rname')).not.toContainText('enter a message');
@@ -170,7 +170,7 @@ test('the shaded squares are the colour the legend says they are', async ({ page
 test('Gronsfeld says which rows it cannot key before you click them', async ({ page }) => {
   await page.fill('#key', '31415');
   await page.getByRole('button', { name: 'Gronsfeld' }).click();
-  await page.getByRole('button', { name: 'Compose by clicking: off' }).click();
+  await page.getByRole('button', { name: 'Compose by clicking' }).click();
 
   await page.locator('#grid td[data-r="3"][data-c="0"]').hover(); // row D: digit 3, reachable
   await expect(page.locator('#readout .add')).toContainText('click to add');
@@ -238,4 +238,30 @@ test('the squares stay square, and the headers stay put', async ({ page }) => {
     );
   });
   expect(pinned).toBeLessThanOrEqual(2); // the alphabet stays at the top of the pane
+});
+
+test('the picker and the composing toggle report their own state', async ({ page }) => {
+  const pick = page.locator('#picks button').nth(1);
+  await expect(pick).toHaveAttribute('aria-pressed', 'false');
+  await pick.click();
+  await expect(pick).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#picks button[aria-pressed="true"]')).toHaveCount(1);
+  await pick.click();
+  await expect(pick).toHaveAttribute('aria-pressed', 'false');
+
+  const compose = page.getByRole('button', { name: 'Compose by clicking' });
+  await expect(compose).toHaveAttribute('aria-pressed', 'false');
+  await compose.click();
+  await expect(compose).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('what changes on the page is announced', async ({ page }) => {
+  for (const [sel, role] of [
+    ['#rname', 'status'],
+    ['#tip', 'status'],
+    ['#readout', 'status'],
+  ]) {
+    await expect(page.locator(sel)).toHaveAttribute('role', role);
+  }
+  await expect(page.locator('#rnote')).toHaveAttribute('aria-live', 'polite');
 });

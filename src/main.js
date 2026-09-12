@@ -231,7 +231,7 @@ function setCompose(on) {
   COMPOSE = on;
   const btn = document.getElementById('compose');
   btn.classList.toggle('on', on);
-  btn.textContent = 'Compose by clicking: ' + (on ? 'on' : 'off');
+  btn.setAttribute('aria-pressed', String(on));
   document.body.classList.toggle('composing', on);
   document.getElementById('undo').hidden = !on;
   setTip();
@@ -305,14 +305,19 @@ function clearRun(msg) {
 }
 
 function run(i) {
-  picksEl.querySelectorAll('button').forEach((b) => b.classList.remove('on'));
+  picksEl.querySelectorAll('button').forEach((b) => {
+    b.classList.remove('on');
+    b.setAttribute('aria-pressed', 'false');
+  });
   if (active === i) {
     active = null;
     clearRun('Pick a cipher to mark up the table');
     return;
   }
   active = i;
-  picksEl.querySelector('[data-btn="' + i + '"]').classList.add('on');
+  const pick = picksEl.querySelector('[data-btn="' + i + '"]');
+  pick.classList.add('on');
+  pick.setAttribute('aria-pressed', 'true');
 
   const spec = CIPHERS[i];
   RUN = runCipher(spec, msgEl.value, keyEl.value);
@@ -365,7 +370,13 @@ function run(i) {
 function renderPicks() {
   picksEl.innerHTML = CIPHERS.map(
     (s, i) =>
-      '<button data-btn="' + i + '">' + s.name + '<span class="sub">' + s.sub + '</span></button>'
+      '<button type="button" aria-pressed="false" data-btn="' +
+      i +
+      '">' +
+      s.name +
+      '<span class="sub">' +
+      s.sub +
+      '</span></button>'
   ).join('');
   picksEl
     .querySelectorAll('button')
