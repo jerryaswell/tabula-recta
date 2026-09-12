@@ -1,4 +1,4 @@
-import { AZ, chr, idx, N } from './lib/alphabet.js';
+import { AZ, chr, digitsOf, idx, N } from './lib/alphabet.js';
 import { CIPHERS, DERIVED, ROLE_LETTER, ROLE_WORD } from './lib/ciphers.js';
 import { letterAt, nextKeyRow, runCipher } from './lib/run.js';
 
@@ -301,14 +301,19 @@ function run(i) {
 
   if (!RUN.ready) {
     const haveMessage = idx(msgEl.value).length > 0;
+    // a key of bare digits is a key for Gronsfeld and for nothing else, so say which
+    // kind is wanted rather than repeating 'enter a key' at someone who just did
+    const wrongKind = !spec.digits && !idx(keyEl.value).length && digitsOf(keyEl.value).length > 0;
     rname.innerHTML =
       spec.name +
       ' <span class="formula">· ' +
       (COMPOSE
         ? 'click squares to build the message' + (RUN.haveKey ? '' : ' and key')
-        : haveMessage
-          ? 'enter a key'
-          : 'enter a message') +
+        : wrongKind
+          ? 'this cipher keys on letters — digits are only a key for Gronsfeld'
+          : haveMessage
+            ? 'enter a key'
+            : 'enter a message') +
       '</span>';
     rplain.innerHTML = rkey.innerHTML = rcipher.innerHTML = '';
     rnote.textContent = spec.note;
