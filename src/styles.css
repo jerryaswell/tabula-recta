@@ -537,3 +537,63 @@ body.composing td:hover {
   white-space: nowrap;
   border: 0;
 }
+
+/* which role a marked header carries is otherwise hue alone: in grayscale the
+   message columns and the key rows are the same grey. The ruling under the
+   letter the pointer is on names it a second way. */
+th.at.p {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+th.at.k {
+  text-decoration: underline double;
+  text-underline-offset: 2px;
+}
+th.at.c {
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}
+.legend .p b {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.legend .k b {
+  text-decoration: underline double;
+  text-underline-offset: 2px;
+}
+.legend .c b {
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}
+
+/* when the reader has replaced the palette, meaning carried by fill has to be
+   carried by something the mode keeps */
+@media (forced-colors: active) {
+  td.used,
+  th.use-p,
+  th.use-k,
+  th.use-c {
+    forced-color-adjust: none;
+    background: Canvas;
+    color: CanvasText;
+    text-decoration: underline;
+  }
+  td.trail,
+  td.cross {
+    forced-color-adjust: none;
+    background: Canvas;
+    outline: 1px dotted CanvasText;
+    outline-offset: -1px;
+  }
+  td.at,
+  th.at,
+  th.next,
+  .picks button.on,
+  #compose.on,
+  .stream code b.cur {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+    border-color: HighlightText;
+  }
+}
