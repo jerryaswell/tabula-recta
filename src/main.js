@@ -223,7 +223,11 @@ function setCompose(on) {
   document.body.classList.toggle('composing', on);
   document.getElementById('undo').hidden = !on;
   setTip();
-  build();
+  // the result line reads differently in compose mode, so re-run rather than
+  // only redrawing the table — otherwise it keeps telling you to type while the
+  // tip underneath tells you to click
+  if (active !== null) rerun();
+  else build();
 }
 
 function setTip() {

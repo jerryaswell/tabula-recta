@@ -110,7 +110,18 @@ test('clearing both fields drops into composing', async ({ page }) => {
   await expect(page.locator('#msg')).toHaveValue('');
   await expect(page.locator('#key')).toHaveValue('');
   await expect(page.locator('body')).toHaveClass(/composing/);
+  await expect(page.locator('#rname')).toContainText('click squares to build the message and key');
+  await expect(page.locator('#tip')).toContainText('each click adds one letter');
+});
+
+test('turning composing on re-reads the result line, not just the table', async ({ page }) => {
+  await page.getByRole('button', { name: 'Repeating keyword' }).click();
+  await page.fill('#msg', '');
   await expect(page.locator('#rname')).toContainText('enter a message');
+  await page.getByRole('button', { name: 'Compose by clicking: off' }).click();
+  // the instruction must agree with the tip below it
+  await expect(page.locator('#rname')).toContainText('click squares to build the message');
+  await expect(page.locator('#rname')).not.toContainText('enter a message');
 });
 
 test('the page loads nothing from the network but itself', async ({ page }) => {
