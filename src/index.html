@@ -21,18 +21,24 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <div class="wrap">
-      <div class="eyebrow">Cipher</div>
-      <div class="picks" id="picks"></div>
+    <main class="wrap">
+      <h1>Tabula recta</h1>
+      <p class="lede">
+        Twenty-six alphabets, each shifted one place from the last. Pick a cipher and the table
+        marks the squares a message walks through — hover any square to read off its working.
+      </p>
+
+      <div class="eyebrow" id="cipher-label">Cipher</div>
+      <div class="picks" id="picks" role="group" aria-labelledby="cipher-label"></div>
 
       <div class="fields">
         <div class="field f-plain">
-          <div class="eyebrow">Message</div>
-          <input id="msg" value="ATTACKATDAWN" spellcheck="false" aria-label="Message" />
+          <label class="eyebrow" for="msg">Message</label>
+          <input id="msg" value="ATTACKATDAWN" spellcheck="false" autocapitalize="characters" />
         </div>
         <div class="field f-key">
-          <div class="eyebrow">Key</div>
-          <input id="key" value="LEMON" spellcheck="false" aria-label="Key" />
+          <label class="eyebrow" for="key">Key</label>
+          <input id="key" value="LEMON" spellcheck="false" autocapitalize="characters" />
         </div>
       </div>
 
@@ -57,9 +63,14 @@
         >
       </div>
 
-      <div class="scroll"><table id="grid"></table></div>
       <div class="legend" id="legend"></div>
-    </div>
+      <div class="scroll"><table id="grid"></table></div>
+
+      <footer>
+        <a href="https://en.wikipedia.org/wiki/Tabula_recta">What the table is</a> ·
+        <a href="https://github.com/jerryaswell/tabula-recta">Source</a>
+      </footer>
+    </main>
 
     <script type="module" src="./main.js"></script>
   </body>

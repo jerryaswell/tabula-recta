@@ -24,11 +24,18 @@ let COMPOSE = false;
 
 /* ---------- the table ---------- */
 function build() {
-  const out = ['<thead><tr><th></th>'];
-  for (let c = 0; c < N; c++) out.push('<th data-hc="' + c + '">' + chr(c) + '</th>');
+  // the caption has to be written here: every rebuild replaces the table's markup
+  const out = [
+    '<caption class="sr-only">Tabula recta: 26 rows A to Z down the side, 26 columns ' +
+      'A to Z across the top, each square holding the row letter plus the column letter. ' +
+      'Move between squares with the arrow keys; the working for the square you are on is ' +
+      'read out above the table.</caption>',
+    '<thead><tr><td></td>',
+  ];
+  for (let c = 0; c < N; c++) out.push('<th scope="col" data-hc="' + c + '">' + chr(c) + '</th>');
   out.push('</tr></thead><tbody>');
   for (let r = 0; r < N; r++) {
-    out.push('<tr><th data-hr="' + r + '">' + chr(r) + '</th>');
+    out.push('<tr><th scope="row" data-hr="' + r + '">' + chr(r) + '</th>');
     for (let c = 0; c < N; c++)
       out.push('<td data-r="' + r + '" data-c="' + c + '">' + chr((r + c) % 26) + '</td>');
     out.push('</tr>');
