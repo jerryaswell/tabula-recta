@@ -19,7 +19,10 @@ export function runCipher(spec, message, key) {
   const letters = idx(key);
   const digits = digitsOf(key);
   const gron = digits.length ? digits : letters.map((k) => k % 10);
-  const haveKey = spec.id === 'trithemius' || letters.length > 0 || digits.length > 0;
+  // a digit key only counts for the cipher that reads digits; every other cipher
+  // indexes into the letters, and an empty letter key would run off the end of it
+  const haveKey =
+    spec.id === 'trithemius' || letters.length > 0 || (spec.digits === true && digits.length > 0);
 
   if (!plain.length || !haveKey) {
     return { spec, steps: [], plain: [], ks: [], cipher: [], gron, haveKey, ready: false };

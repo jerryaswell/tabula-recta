@@ -5,7 +5,7 @@ message walks through — numbered in order, with the row and column headers col
 each letter plays. Hover a square to read off its working, or turn on composing and write a
 message by clicking squares instead of typing.
 
-**Live site:** https://jerryaswell.github.io/tabula-recta/
+**Live site:** https://tabula-recta.com/
 
 [![Deploy](https://github.com/jerryaswell/tabula-recta/actions/workflows/deploy.yml/badge.svg)](https://github.com/jerryaswell/tabula-recta/actions/workflows/deploy.yml)
 [![CI](https://github.com/jerryaswell/tabula-recta/actions/workflows/ci.yml/badge.svg)](https://github.com/jerryaswell/tabula-recta/actions/workflows/ci.yml)
@@ -18,13 +18,13 @@ sits on which edge, and where the key comes from.
 
 | Cipher                 |                                | Square is     |
 | ---------------------- | ------------------------------ | ------------- |
-| Trithemius progressive | Polygraphia, 1508 — no key     | message + key |
+| Trithemius progressive | Polygraphia, 1518 — no key     | message + key |
 | Repeating keyword      | Bellaso, 1553 — the "Vigenère" | message + key |
 | Plaintext autokey      | Vigenère, 1586                 | message + key |
 | Ciphertext autokey     | weaker autokey variant         | message + key |
-| Beaufort               | sold as a slide, 1850s         | key − message |
+| Beaufort               | sold as a card, 1857           | key − message |
 | Variant Beaufort       | message minus key              | message − key |
-| Gronsfeld              | numeric key, 0–9               | message + key |
+| Gronsfeld              | Count Gronsfeld, 1665          | message + key |
 | Running key            | book or passage as key         | message + key |
 
 ## Working on it
@@ -44,8 +44,12 @@ Tests:
 ```sh
 npm run test:unit  # the cipher logic and the build output, via node --test
 npm run test:e2e   # the built page driven in Chromium, via Playwright
+npm run test:a11y  # just the axe-core audit, part of test:e2e
 npm test           # both
 ```
+
+The browser suite includes an axe-core audit of the page cold, with a cipher marked up, while
+composing, and of the 404 — held to WCAG 2.2 A and AA.
 
 `npm run test:e2e` builds the site and serves `dist/` itself, so it always runs against the real
 output rather than the sources. First run needs a browser: `npx playwright install chromium`.

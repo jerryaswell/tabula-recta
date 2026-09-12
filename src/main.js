@@ -1,4 +1,4 @@
-import { AZ, chr, idx, N } from './lib/alphabet.js';
+import { AZ, chr, digitsOf, idx, N } from './lib/alphabet.js';
 import { CIPHERS, DERIVED, ROLE_LETTER, ROLE_WORD } from './lib/ciphers.js';
 import { letterAt, nextKeyRow, runCipher } from './lib/run.js';
 
@@ -21,25 +21,52 @@ const HOVER_HINT =
 let active = null;
 let RUN = null;
 let COMPOSE = false;
+/* the square the grid hands focus to: one tab stop for 676 cells, moved with
+   the arrow keys, so the table is walkable without a pointer */
+let focusCell = { r: 0, c: 0 };
+
+const cellAt = (r, c) => table.querySelector('td[data-r="' + r + '"][data-c="' + c + '"]');
 
 /* ---------- the table ---------- */
 function build() {
-  const out = ['<thead><tr><th></th>'];
-  for (let c = 0; c < N; c++) out.push('<th data-hc="' + c + '">' + chr(c) + '</th>');
+  const hadFocus = table.contains(document.activeElement);
+  // the caption has to be written here: every rebuild replaces the table's markup
+  const out = [
+    '<caption class="sr-only">Tabula recta: 26 rows A to Z down the side, 26 columns ' +
+      'A to Z across the top, each square holding the row letter plus the column letter. ' +
+      'Move between squares with the arrow keys; the working for the square you are on is ' +
+      'read out above the table.</caption>',
+    '<thead><tr><td></td>',
+  ];
+  for (let c = 0; c < N; c++) out.push('<th scope="col" data-hc="' + c + '">' + chr(c) + '</th>');
   out.push('</tr></thead><tbody>');
   for (let r = 0; r < N; r++) {
-    out.push('<tr><th data-hr="' + r + '">' + chr(r) + '</th>');
+    out.push('<tr><th scope="row" data-hr="' + r + '">' + chr(r) + '</th>');
     for (let c = 0; c < N; c++)
-      out.push('<td data-r="' + r + '" data-c="' + c + '">' + chr((r + c) % 26) + '</td>');
+      out.push(
+        '<td tabindex="' +
+          (r === focusCell.r && c === focusCell.c ? '0' : '-1') +
+          '" data-r="' +
+          r +
+          '" data-c="' +
+          c +
+          '">' +
+          chr((r + c) % 26) +
+          '</td>'
+      );
     out.push('</tr>');
   }
   table.innerHTML = out.join('') + '</tbody>';
+  // a rebuild throws away the focused element, so put focus back where it was
+  if (hadFocus) cellAt(focusCell.r, focusCell.c)?.focus();
   mark();
 }
 
 function mark() {
+  table.classList.remove('cell-p', 'cell-k', 'cell-c');
   if (!RUN) return;
-  const [rowRole, colRole] = RUN.spec.roles;
+  const [rowRole, colRole, cellRole] = RUN.spec.roles;
+  table.classList.add('cell-' + ROLE_LETTER[cellRole]);
   const seen = new Map();
 
   RUN.steps.forEach((st, n) => {
@@ -126,6 +153,19 @@ function light(r, c, hits) {
   const sign = RUN.spec.op === 'add' ? '+' : '−';
   const order = RUN.spec.op === 'sub-pk' ? ['key', 'plain'] : ['plain', 'key'];
 
+  /* what a click here would do — said before the click, so a row a Gronsfeld key
+     cannot reach says so while the pointer is on it rather than after */
+  const composeAdd = (v) =>
+    RUN.spec.digits && v.key > 9
+      ? '<span class="add">no digit for this row — a Gronsfeld key stops at 9</span>'
+      : '<span class="add">click to add <span class="p">' +
+        chr(v.plain) +
+        '</span>' +
+        (DERIVED.includes(RUN.spec.id)
+          ? ' (key follows on its own)'
+          : ' and <span class="k">' + (RUN.spec.digits ? v.key : chr(v.key)) + '</span>') +
+        '</span>';
+
   readout.innerHTML =
     say(order[0]) +
     '<span class="op">' +
@@ -141,15 +181,7 @@ function light(r, c, hits) {
         ' of the message'
       : 'not a step in this message — what the table would give for this pair') +
     '</span>' +
-    (COMPOSE
-      ? '<span class="add">click to add <span class="p">' +
-        chr(val.plain) +
-        '</span>' +
-        (DERIVED.includes(RUN.spec.id)
-          ? ' (key follows on its own)'
-          : ' and <span class="k">' + (RUN.spec.digits ? val.key : chr(val.key)) + '</span>') +
-        '</span>'
-      : '');
+    (COMPOSE ? composeAdd(val) : '');
 
   hits.forEach((n) => {
     rplain.children[n]?.classList.add('cur');
@@ -167,6 +199,55 @@ table.addEventListener('mouseover', (e) => {
 table.addEventListener('mouseleave', () => {
   clearHover();
   readout.innerHTML = HOVER_HINT;
+});
+
+table.addEventListener('focusin', (e) => {
+  const cell = e.target.closest('td[data-r]');
+  if (!cell) return;
+  const r = +cell.dataset.r;
+  const c = +cell.dataset.c;
+  cellAt(focusCell.r, focusCell.c)?.setAttribute('tabindex', '-1');
+  focusCell = { r, c };
+  cell.setAttribute('tabindex', '0');
+  light(r, c, stepsAt(r, c));
+});
+
+table.addEventListener('focusout', (e) => {
+  if (table.contains(e.relatedTarget)) return;
+  clearHover();
+  readout.innerHTML = HOVER_HINT;
+});
+
+const STEP = {
+  ArrowUp: [-1, 0],
+  ArrowDown: [1, 0],
+  ArrowLeft: [0, -1],
+  ArrowRight: [0, 1],
+};
+
+table.addEventListener('keydown', (e) => {
+  const cell = e.target.closest('td[data-r]');
+  if (!cell) return;
+  const r = +cell.dataset.r;
+  const c = +cell.dataset.c;
+  const clamp = (v) => Math.max(0, Math.min(N - 1, v));
+
+  if (e.key === 'Enter' || e.key === ' ') {
+    if (!COMPOSE) return;
+    e.preventDefault();
+    addFromCell(r, c);
+    cellAt(r, c)?.focus();
+    return;
+  }
+
+  let next = null;
+  if (STEP[e.key]) next = cellAt(clamp(r + STEP[e.key][0]), clamp(c + STEP[e.key][1]));
+  else if (e.key === 'Home') next = cellAt(e.ctrlKey ? 0 : r, 0);
+  else if (e.key === 'End') next = cellAt(e.ctrlKey ? N - 1 : r, N - 1);
+  if (next) {
+    e.preventDefault();
+    next.focus();
+  }
 });
 
 /* ---------- composing by clicking ---------- */
@@ -217,11 +298,15 @@ function setCompose(on) {
   COMPOSE = on;
   const btn = document.getElementById('compose');
   btn.classList.toggle('on', on);
-  btn.textContent = 'Compose by clicking: ' + (on ? 'on' : 'off');
+  btn.setAttribute('aria-pressed', String(on));
   document.body.classList.toggle('composing', on);
   document.getElementById('undo').hidden = !on;
   setTip();
-  build();
+  // the result line reads differently in compose mode, so re-run rather than
+  // only redrawing the table — otherwise it keeps telling you to type while the
+  // tip underneath tells you to click
+  if (active !== null) rerun();
+  else build();
 }
 
 function setTip() {
@@ -241,15 +326,17 @@ function setTip() {
 /* ---------- rendering a run ---------- */
 function stream(el, arr, labels) {
   el.innerHTML = arr
-    .map((v, n) => '<b data-n="' + n + '">' + (labels ? labels[n] : chr(v)) + '</b>')
+    .map((v, n) => '<b tabindex="0" data-n="' + n + '">' + (labels ? labels[n] : chr(v)) + '</b>')
     .join('');
-  el.querySelectorAll('b').forEach((b) =>
-    b.addEventListener('mouseenter', () => {
+  el.querySelectorAll('b').forEach((b) => {
+    const show = () => {
       if (!RUN) return;
       const st = RUN.steps[+b.dataset.n];
       light(st.row, st.col, stepsAt(st.row, st.col));
-    })
-  );
+    };
+    b.addEventListener('mouseenter', show);
+    b.addEventListener('focus', show);
+  });
 }
 
 function setLegend() {
@@ -287,28 +374,38 @@ function clearRun(msg) {
 }
 
 function run(i) {
-  picksEl.querySelectorAll('button').forEach((b) => b.classList.remove('on'));
+  picksEl.querySelectorAll('button').forEach((b) => {
+    b.classList.remove('on');
+    b.setAttribute('aria-pressed', 'false');
+  });
   if (active === i) {
     active = null;
     clearRun('Pick a cipher to mark up the table');
     return;
   }
   active = i;
-  picksEl.querySelector('[data-btn="' + i + '"]').classList.add('on');
+  const pick = picksEl.querySelector('[data-btn="' + i + '"]');
+  pick.classList.add('on');
+  pick.setAttribute('aria-pressed', 'true');
 
   const spec = CIPHERS[i];
   RUN = runCipher(spec, msgEl.value, keyEl.value);
 
   if (!RUN.ready) {
     const haveMessage = idx(msgEl.value).length > 0;
+    // a key of bare digits is a key for Gronsfeld and for nothing else, so say which
+    // kind is wanted rather than repeating 'enter a key' at someone who just did
+    const wrongKind = !spec.digits && !idx(keyEl.value).length && digitsOf(keyEl.value).length > 0;
     rname.innerHTML =
       spec.name +
       ' <span class="formula">· ' +
       (COMPOSE
         ? 'click squares to build the message' + (RUN.haveKey ? '' : ' and key')
-        : haveMessage
-          ? 'enter a key'
-          : 'enter a message') +
+        : wrongKind
+          ? 'this cipher keys on letters — digits are only a key for Gronsfeld'
+          : haveMessage
+            ? 'enter a key'
+            : 'enter a message') +
       '</span>';
     rplain.innerHTML = rkey.innerHTML = rcipher.innerHTML = '';
     rnote.textContent = spec.note;
@@ -342,7 +439,13 @@ function run(i) {
 function renderPicks() {
   picksEl.innerHTML = CIPHERS.map(
     (s, i) =>
-      '<button data-btn="' + i + '">' + s.name + '<span class="sub">' + s.sub + '</span></button>'
+      '<button type="button" aria-pressed="false" data-btn="' +
+      i +
+      '">' +
+      s.name +
+      '<span class="sub">' +
+      s.sub +
+      '</span></button>'
   ).join('');
   picksEl
     .querySelectorAll('button')

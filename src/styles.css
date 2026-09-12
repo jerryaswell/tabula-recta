@@ -1,10 +1,13 @@
 :root {
   --ink: #1b1b1b;
-  --dim: #8a8a8a;
+  --dim: #6f6f6f;
   --rule: #dcdcd6;
+  /* hairlines on paper stay pale; a control's edge has to be seen */
+  --edge: #8f8f8a;
+  --badge: #5f5f5f;
   --paper: #fbfbf8;
   --mark: #efece0;
-  --plain: #9a5b1f;
+  --plain: #8a4f18;
   --key: #2f5f9f;
   --cipher: #2f6f4f;
   --plain-soft: #f3e3d2;
@@ -23,8 +26,32 @@ body {
   font-size: 14px;
   line-height: 1.5;
 }
+/* close to the table's own 596px: the page used to run 400px past everything
+   below the picker, including the rule above the result */
 .wrap {
-  max-width: 1000px;
+  max-width: 860px;
+}
+
+h1 {
+  font: 700 16px/1.3 inherit;
+  letter-spacing: 0.01em;
+  margin: 0 0 5px;
+}
+.lede {
+  font-size: 12px;
+  color: var(--dim);
+  line-height: 1.55;
+  max-width: 68ch;
+  margin: 0 0 20px;
+}
+
+footer {
+  margin-top: 26px;
+  font-size: 12px;
+  color: var(--dim);
+}
+footer a {
+  color: var(--key);
 }
 
 .eyebrow {
@@ -38,7 +65,7 @@ body {
 /* cipher selector */
 .picks {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(216px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(198px, 1fr));
   gap: 6px;
 }
 .picks button {
@@ -47,7 +74,7 @@ body {
   padding: 6px 9px;
   line-height: 1.3;
   background: #fff;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--edge);
   border-radius: 3px;
   color: var(--ink);
   cursor: pointer;
@@ -68,7 +95,7 @@ body {
   color: #fff;
 }
 .picks button.on .sub {
-  color: #cfe3d6;
+  color: #e6f2ea;
 }
 
 /* message + key, then the composing row */
@@ -85,7 +112,19 @@ body {
   gap: 4px;
 }
 .field .eyebrow {
+  display: block;
   margin: 0;
+}
+.field {
+  flex: 1 1 26ch;
+  min-width: 0;
+}
+.f-plain {
+  max-width: 34ch;
+}
+/* the running key invites a whole sentence, so its field can hold one */
+.f-key {
+  max-width: 48ch;
 }
 .fields input {
   font: inherit;
@@ -96,7 +135,7 @@ body {
   border-radius: 3px;
   background: #fff;
   color: var(--ink);
-  width: 30ch;
+  width: 100%;
 }
 .f-plain input {
   border-color: var(--plain);
@@ -117,7 +156,7 @@ body {
   font-size: 12px;
   padding: 4px 10px;
   background: #fff;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--edge);
   border-radius: 3px;
   color: var(--ink);
   cursor: pointer;
@@ -136,10 +175,17 @@ body {
 }
 
 /* result */
+/* the block is reserved at the height of its tallest cipher note, so picking a
+   cipher — or the streams filling on the first click — never moves the table */
 .result {
   margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid var(--rule);
+  min-height: 210px;
+}
+/* three labels with nothing beside them read as a rendering failure */
+.result:has(#rcipher:empty) .stream {
+  display: none;
 }
 .rname {
   font-size: 13px;
@@ -201,16 +247,29 @@ body {
   margin-top: 10px;
   max-width: 74ch;
   line-height: 1.55;
+  min-height: 8em;
 }
 
+/* the annotation and the compose line always take a row of their own, and the
+   block reserves them, so crossing from a marked square to an unmarked one
+   cannot shift the table out from under the pointer doing the crossing */
 .readout {
-  margin: 18px 0 6px;
+  margin: 18px 0 8px;
   font-size: 14px;
-  min-height: 1.6em;
+  min-height: 3.2em;
   display: flex;
   align-items: baseline;
+  align-content: flex-start;
   gap: 7px;
+  row-gap: 3px;
   flex-wrap: wrap;
+}
+.readout .hint,
+.readout .add {
+  flex-basis: 100%;
+}
+body.composing .readout {
+  min-height: 5.4em;
 }
 .readout .hint {
   color: var(--dim);
@@ -235,20 +294,49 @@ body {
 .readout .add {
   color: var(--ink);
   font-size: 12px;
-  border-left: 1px solid var(--rule);
-  padding-left: 9px;
+  border-top: 1px solid var(--rule);
+  padding-top: 5px;
+  margin-top: 2px;
 }
 
 /* the table */
+/* the pane is the scrollport, not the page: that is what makes the sticky row
+   and column headers stick, and it keeps the squares square instead of letting
+   a narrow window squeeze them. The white fades sit on the content and the
+   shadows on the frame, so an edge is shaded only while it hides something. */
 .scroll {
   overflow: auto;
   border: 1px solid var(--rule);
-  background: #fff;
-  display: inline-block;
+  display: block;
+  width: fit-content;
   max-width: 100%;
+  max-height: min(74vh, 648px);
+  overscroll-behavior-x: contain;
+  background:
+    linear-gradient(to right, #fff 40%, rgba(255, 255, 255, 0)) left / 24px 100% no-repeat,
+    linear-gradient(to left, #fff 40%, rgba(255, 255, 255, 0)) right / 24px 100% no-repeat,
+    radial-gradient(farthest-side at 0 50%, rgba(27, 27, 27, 0.14), transparent) left / 9px 100%
+      no-repeat,
+    radial-gradient(farthest-side at 100% 50%, rgba(27, 27, 27, 0.14), transparent) right / 9px 100%
+      no-repeat,
+    #fff;
+  background-attachment: local, local, scroll, scroll;
 }
 table {
   border-collapse: collapse;
+}
+td,
+th {
+  min-width: 22px;
+}
+/* while every square is a click target, they are targets at the size the
+   guidelines ask for; the reading view keeps its own density */
+body.composing td,
+body.composing th {
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  line-height: 24px;
 }
 td,
 th {
@@ -328,23 +416,35 @@ td.used::after {
   position: absolute;
   top: -1px;
   right: 1px;
-  font-size: 7px;
-  color: var(--dim);
+  font-size: 8px;
+  color: var(--badge);
   line-height: 1;
 }
+/* the trail is the reading gesture, read across then down; the cross is only
+   orientation. They were a sixteenth of a step apart — the same beige L. The
+   trail is warmer and carries a hairline along the path it marks. */
 td.trail {
-  background: #f5f2e7;
+  background: #efe4cf;
+}
+td.trail:not(.used) {
+  box-shadow: inset 0 -1px 0 rgba(138, 79, 24, 0.22);
 }
 td.cross {
-  background: var(--mark);
+  background: #f7f5f0;
 }
 td.at {
   background: var(--cipher);
   color: #fff;
   font-weight: 700;
 }
+/* the hover crossing is a passing state; a marked square outranks it and keeps
+   its fill, or the path being read breaks up under the pointer reading it */
+td.used.trail,
+td.used.cross {
+  background: var(--cipher-soft);
+}
 td.at::after {
-  color: #cfe3d6;
+  color: #e6f2ea;
 }
 body.composing td {
   cursor: pointer;
@@ -354,13 +454,38 @@ body.composing td:hover {
   outline-offset: -1px;
 }
 
+/* which letter sits in the square changes with the cipher, so the fill follows
+   the role rather than always standing for the ciphertext */
+#grid.cell-p td.used,
+#grid.cell-p td.used.trail,
+#grid.cell-p td.used.cross {
+  background: var(--plain-soft);
+  color: var(--plain);
+}
+#grid.cell-k td.used,
+#grid.cell-k td.used.trail,
+#grid.cell-k td.used.cross {
+  background: var(--key-soft);
+  color: var(--key);
+}
+#grid.cell-p td.at {
+  background: var(--plain);
+  color: #fff;
+}
+#grid.cell-k td.at {
+  background: var(--key);
+  color: #fff;
+}
+
+/* the key to a colour-coded diagram belongs above the diagram */
 .legend {
   display: flex;
   gap: 18px;
   flex-wrap: wrap;
   font-size: 11px;
   color: var(--dim);
-  margin-top: 10px;
+  margin: 0 0 8px;
+  min-height: 1.5em;
 }
 .legend b {
   font-weight: 400;
@@ -378,4 +503,131 @@ body.composing td:hover {
 :focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 1px;
+}
+/* inside the grid the ring goes within the square, and above the sticky headers
+   so a focused square scrolled under them is still visible */
+#grid td:focus-visible,
+.stream code b:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+  z-index: 4;
+}
+
+@media (max-width: 560px) {
+  .result {
+    min-height: 230px;
+  }
+  .readout {
+    min-height: 4.8em;
+  }
+  body.composing .readout {
+    min-height: 7.2em;
+  }
+}
+
+@media (max-width: 430px) {
+  .result {
+    min-height: 285px;
+  }
+  .rnote {
+    min-height: 13em;
+  }
+}
+
+/* someone who has asked for more contrast gets it */
+@media (prefers-contrast: more) {
+  :root {
+    --dim: #4a4a4a;
+    --rule: #9a9a94;
+    --edge: #6a6a66;
+    --badge: #3d3d3d;
+  }
+}
+
+/* for things that need saying to a screen reader and not to the page */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* which role a marked header carries is otherwise hue alone: in grayscale the
+   message columns and the key rows are the same grey. The ruling under the
+   letter the pointer is on names it a second way. */
+th.at.p {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+th.at.k {
+  text-decoration: underline double;
+  text-underline-offset: 2px;
+}
+th.at.c {
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}
+.legend .p b {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.legend .k b {
+  text-decoration: underline double;
+  text-underline-offset: 2px;
+}
+.legend .c b {
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}
+
+/* when the reader has replaced the palette, meaning carried by fill has to be
+   carried by something the mode keeps */
+@media (forced-colors: active) {
+  td.used,
+  th.use-p,
+  th.use-k,
+  th.use-c {
+    forced-color-adjust: none;
+    background: Canvas;
+    color: CanvasText;
+    text-decoration: underline;
+  }
+  td.trail,
+  td.cross {
+    forced-color-adjust: none;
+    background: Canvas;
+    outline: 1px dotted CanvasText;
+    outline-offset: -1px;
+  }
+  td.at,
+  th.at,
+  th.next,
+  .picks button.on,
+  #compose.on,
+  .stream code b.cur {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+    border-color: HighlightText;
+  }
+}
+
+/* on a phone the picker was 391px of chrome before the table began */
+@media (max-width: 520px) {
+  .picks {
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+  }
+  .picks button {
+    padding: 6px 8px;
+    line-height: 1.25;
+  }
+  .picks button .sub {
+    display: none;
+  }
 }

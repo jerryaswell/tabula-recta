@@ -81,7 +81,7 @@ test('composing by clicking builds the message and the key', async ({ page }) =>
   await page.fill('#msg', '');
   await page.fill('#key', '');
   await page.getByRole('button', { name: 'Repeating keyword' }).click();
-  await page.getByRole('button', { name: 'Compose by clicking: off' }).click();
+  await page.getByRole('button', { name: 'Compose by clicking' }).click();
   await expect(page.locator('body')).toHaveClass(/composing/);
 
   await page.locator('#grid td[data-r="11"][data-c="0"]').click(); // key L, message A
@@ -98,7 +98,7 @@ test('composing by clicking builds the message and the key', async ({ page }) =>
 test('a derived cipher marks the row the next letter must land on', async ({ page }) => {
   await page.fill('#msg', '');
   await page.getByRole('button', { name: 'Plaintext autokey' }).click();
-  await page.getByRole('button', { name: 'Compose by clicking: off' }).click();
+  await page.getByRole('button', { name: 'Compose by clicking' }).click();
   await expect(page.locator('#grid th.next')).toHaveCount(1);
   await expect(page.locator('#grid th.next')).toHaveText('L'); // the seed key LEMON starts here
   await expect(page.locator('#tip')).toContainText('the key is generated');
@@ -110,7 +110,18 @@ test('clearing both fields drops into composing', async ({ page }) => {
   await expect(page.locator('#msg')).toHaveValue('');
   await expect(page.locator('#key')).toHaveValue('');
   await expect(page.locator('body')).toHaveClass(/composing/);
+  await expect(page.locator('#rname')).toContainText('click squares to build the message and key');
+  await expect(page.locator('#tip')).toContainText('each click adds one letter');
+});
+
+test('turning composing on re-reads the result line, not just the table', async ({ page }) => {
+  await page.getByRole('button', { name: 'Repeating keyword' }).click();
+  await page.fill('#msg', '');
   await expect(page.locator('#rname')).toContainText('enter a message');
+  await page.getByRole('button', { name: 'Compose by clicking' }).click();
+  // the instruction must agree with the tip below it
+  await expect(page.locator('#rname')).toContainText('click squares to build the message');
+  await expect(page.locator('#rname')).not.toContainText('enter a message');
 });
 
 test('the page loads nothing from the network but itself', async ({ page }) => {
@@ -126,4 +137,173 @@ test('the 404 page points back at the table', async ({ page }) => {
   const response = await page.goto('/nowhere');
   expect(response.status()).toBe(404);
   await expect(page.getByRole('link', { name: 'the front page' })).toBeVisible();
+});
+
+test('a marked square keeps its fill when the hover crossing runs over it', async ({ page }) => {
+  await page.getByRole('button', { name: 'Repeating keyword' }).click();
+  await page.locator('#grid td[data-r="11"][data-c="0"]').hover();
+  const fills = await page.evaluate(() =>
+    [...document.querySelectorAll('#grid td.used.trail, #grid td.used.cross')].map(
+      (el) => getComputedStyle(el).backgroundColor
+    )
+  );
+  expect(fills.length).toBeGreaterThan(0);
+  expect([...new Set(fills)]).toEqual(['rgb(223, 234, 227)']); // --cipher-soft, not the trail tint
+});
+
+test('the shaded squares are the colour the legend says they are', async ({ page }) => {
+  // the square holds a different one of the three letters depending on the cipher
+  const cases = [
+    { name: 'Repeating keyword', role: 'cipher', fill: 'rgb(223, 234, 227)' },
+    { name: 'Beaufort', role: 'key', fill: 'rgb(221, 231, 243)' },
+    { name: 'Variant Beaufort', role: 'message', fill: 'rgb(243, 227, 210)' },
+  ];
+  for (const { name, role, fill } of cases) {
+    await page.locator('#picks button').filter({ hasText: name }).first().click();
+    await expect(page.locator('#legend')).toContainText('shaded squares: ' + role);
+    const used = page.locator('#grid td.used').first();
+    await expect(used).toHaveCSS('background-color', fill);
+    await page.locator('#picks button').filter({ hasText: name }).first().click(); // deselect
+  }
+});
+
+test('Gronsfeld says which rows it cannot key before you click them', async ({ page }) => {
+  await page.fill('#key', '31415');
+  await page.getByRole('button', { name: 'Gronsfeld' }).click();
+  await page.getByRole('button', { name: 'Compose by clicking' }).click();
+
+  await page.locator('#grid td[data-r="3"][data-c="0"]').hover(); // row D: digit 3, reachable
+  await expect(page.locator('#readout .add')).toContainText('click to add');
+
+  await page.locator('#grid td[data-r="14"][data-c="0"]').hover(); // row O: digit 14, out of reach
+  await expect(page.locator('#readout .add')).toContainText('a Gronsfeld key stops at 9');
+  // the working for the square is still there to read
+  await expect(page.locator('#readout')).toContainText('message');
+  await expect(page.locator('#readout')).toContainText('key');
+});
+
+test('the table does not move while you read across it', async ({ page }) => {
+  const gridTop = () =>
+    page.evaluate(() =>
+      Math.round(document.getElementById('grid').getBoundingClientRect().top + window.scrollY)
+    );
+
+  const cold = await gridTop();
+  const tops = [];
+  for (let i = 0; i < 8; i++) {
+    await page.locator('#picks button').nth(i).click();
+    tops.push(await gridTop());
+    await page.locator('#picks button').nth(i).click();
+  }
+  expect([...new Set(tops)]).toEqual([cold]); // every cipher reserves the same block
+
+  await page.locator('#picks button').nth(1).click();
+  await page.locator('#grid td[data-r="11"][data-c="0"]').hover(); // a marked square
+  const onPath = await gridTop();
+  await page.locator('#grid td[data-r="2"][data-c="3"]').hover(); // an unmarked one, longer annotation
+  expect(await gridTop()).toBe(onPath);
+});
+
+test('clicking the same square twice adds the same letter twice', async ({ page }) => {
+  // the readout used to change height under the pointer, sliding a different
+  // square beneath a stationary cursor between clicks
+  await page.getByRole('button', { name: 'Clear both' }).click();
+  await page.locator('#picks button').nth(1).click();
+  const cell = page.locator('#grid td[data-r="11"][data-c="0"]');
+  await cell.scrollIntoViewIfNeeded(); // mouse.click uses viewport coordinates
+  const box = await cell.boundingBox();
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  for (let i = 0; i < 3; i++) await page.mouse.click(x, y);
+  await expect(page.locator('#msg')).toHaveValue('AAA');
+  await expect(page.locator('#key')).toHaveValue('LLL');
+});
+
+test('the squares stay square, and the headers stay put', async ({ page }) => {
+  await page.setViewportSize({ width: 380, height: 700 });
+  const cell = await page.locator('#grid td').first().boundingBox();
+  expect(Math.round(cell.width)).toBe(22); // not squeezed to fit a narrow window
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
+    await page.evaluate(() => document.documentElement.clientWidth)
+  );
+
+  await page.setViewportSize({ width: 1280, height: 700 });
+  await page.getByRole('button', { name: 'Repeating keyword' }).click();
+  const pinned = await page.evaluate(() => {
+    const pane = document.querySelector('.scroll');
+    pane.scrollTop = 300;
+    const top = pane.getBoundingClientRect().top;
+    return Math.round(
+      document.querySelector('thead th[data-hc="5"]').getBoundingClientRect().top - top
+    );
+  });
+  expect(pinned).toBeLessThanOrEqual(2); // the alphabet stays at the top of the pane
+});
+
+test('the picker and the composing toggle report their own state', async ({ page }) => {
+  const pick = page.locator('#picks button').nth(1);
+  await expect(pick).toHaveAttribute('aria-pressed', 'false');
+  await pick.click();
+  await expect(pick).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#picks button[aria-pressed="true"]')).toHaveCount(1);
+  await pick.click();
+  await expect(pick).toHaveAttribute('aria-pressed', 'false');
+
+  const compose = page.getByRole('button', { name: 'Compose by clicking' });
+  await expect(compose).toHaveAttribute('aria-pressed', 'false');
+  await compose.click();
+  await expect(compose).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('what changes on the page is announced', async ({ page }) => {
+  for (const [sel, role] of [
+    ['#rname', 'status'],
+    ['#tip', 'status'],
+    ['#readout', 'status'],
+  ]) {
+    await expect(page.locator(sel)).toHaveAttribute('role', role);
+  }
+  await expect(page.locator('#rnote')).toHaveAttribute('aria-live', 'polite');
+});
+
+test('the table can be walked and composed from the keyboard', async ({ page }) => {
+  await page.getByRole('button', { name: 'Clear both' }).click(); // empties, turns composing on
+  await page.locator('#picks button').nth(1).click(); // repeating keyword
+
+  await page.locator('#grid td[data-r="0"][data-c="0"]').focus();
+  const where = () =>
+    page.evaluate(() => {
+      const el = document.activeElement;
+      return el.dataset ? el.dataset.r + ',' + el.dataset.c : null;
+    });
+  expect(await where()).toBe('0,0');
+
+  // arrows move one square, and the working follows focus
+  for (let i = 0; i < 11; i++) await page.keyboard.press('ArrowDown');
+  expect(await where()).toBe('11,0');
+  await expect(page.locator('#readout')).toContainText('message');
+  await expect(page.locator('#grid td.at')).toHaveCount(1);
+
+  await page.keyboard.press('Enter'); // adds A and L
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('ArrowUp');
+  await page.keyboard.press('Enter'); // row K, column B
+  await expect(page.locator('#msg')).toHaveValue('AB');
+  await expect(page.locator('#key')).toHaveValue('LK');
+
+  // the grid is one tab stop, not 676
+  const stops = await page.evaluate(
+    () => document.querySelectorAll('#grid td[tabindex="0"]').length
+  );
+  expect(stops).toBe(1);
+
+  await page.keyboard.press('Home');
+  expect(await where()).toBe('10,0');
+});
+
+test('a letter of the message can be read without a mouse', async ({ page }) => {
+  await page.getByRole('button', { name: 'Repeating keyword' }).click();
+  await page.locator('#rplain b').nth(2).focus();
+  await expect(page.locator('#readout')).toContainText('letters 3, 8 of the message');
+  await expect(page.locator('#grid td.at')).toHaveCount(1);
 });

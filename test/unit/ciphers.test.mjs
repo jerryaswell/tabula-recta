@@ -162,3 +162,39 @@ test('the cipher list is well formed', () => {
   }
   for (const id of DERIVED) assert.ok(ids.includes(id), id + ' is a real cipher');
 });
+
+test('a key of bare digits is a key for Gronsfeld and for nothing else', () => {
+  // every other cipher indexes into the letters of the key, so a digits-only key
+  // used to run off the end of an empty array and fill the streams with NaN
+  for (const spec of CIPHERS) {
+    const run = runCipher(spec, 'ATTACKATDAWN', '31415');
+    if (spec.id === 'trithemius') continue; // keyless: always ready
+    if (spec.digits) {
+      assert.equal(run.ready, true, spec.id + ' reads digits');
+      assert.equal(word(run.cipher), 'DUXBHNBXEFZO');
+    } else {
+      assert.equal(run.ready, false, spec.id + ' should ask for a letter key');
+      assert.equal(run.haveKey, false, spec.id);
+      assert.deepEqual(run.steps, [], spec.id);
+    }
+  }
+});
+
+test('no run ever produces a letter outside the alphabet', () => {
+  const keys = ['LEMON', '31415', '', 'a', '9', 'lemon drops!', '0000'];
+  for (const spec of CIPHERS) {
+    for (const key of keys) {
+      const run = runCipher(spec, 'ATTACKATDAWN', key);
+      for (const v of [...run.ks, ...run.cipher]) {
+        assert.ok(Number.isInteger(v), spec.id + ' key ' + JSON.stringify(key) + ' gave ' + v);
+        assert.ok(v >= 0 && v < 26, spec.id + ' key ' + JSON.stringify(key) + ' gave ' + v);
+      }
+      for (const st of run.steps) {
+        assert.ok(
+          st.row >= 0 && st.row < 26 && st.col >= 0 && st.col < 26,
+          spec.id + ' off-table step'
+        );
+      }
+    }
+  }
+});
