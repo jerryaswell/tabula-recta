@@ -21,9 +21,15 @@ const HOVER_HINT =
 let active = null;
 let RUN = null;
 let COMPOSE = false;
+/* the square the grid hands focus to: one tab stop for 676 cells, moved with
+   the arrow keys, so the table is walkable without a pointer */
+let focusCell = { r: 0, c: 0 };
+
+const cellAt = (r, c) => table.querySelector('td[data-r="' + r + '"][data-c="' + c + '"]');
 
 /* ---------- the table ---------- */
 function build() {
+  const hadFocus = table.contains(document.activeElement);
   // the caption has to be written here: every rebuild replaces the table's markup
   const out = [
     '<caption class="sr-only">Tabula recta: 26 rows A to Z down the side, 26 columns ' +
@@ -37,10 +43,22 @@ function build() {
   for (let r = 0; r < N; r++) {
     out.push('<tr><th scope="row" data-hr="' + r + '">' + chr(r) + '</th>');
     for (let c = 0; c < N; c++)
-      out.push('<td data-r="' + r + '" data-c="' + c + '">' + chr((r + c) % 26) + '</td>');
+      out.push(
+        '<td tabindex="' +
+          (r === focusCell.r && c === focusCell.c ? '0' : '-1') +
+          '" data-r="' +
+          r +
+          '" data-c="' +
+          c +
+          '">' +
+          chr((r + c) % 26) +
+          '</td>'
+      );
     out.push('</tr>');
   }
   table.innerHTML = out.join('') + '</tbody>';
+  // a rebuild throws away the focused element, so put focus back where it was
+  if (hadFocus) cellAt(focusCell.r, focusCell.c)?.focus();
   mark();
 }
 
@@ -183,6 +201,55 @@ table.addEventListener('mouseleave', () => {
   readout.innerHTML = HOVER_HINT;
 });
 
+table.addEventListener('focusin', (e) => {
+  const cell = e.target.closest('td[data-r]');
+  if (!cell) return;
+  const r = +cell.dataset.r;
+  const c = +cell.dataset.c;
+  cellAt(focusCell.r, focusCell.c)?.setAttribute('tabindex', '-1');
+  focusCell = { r, c };
+  cell.setAttribute('tabindex', '0');
+  light(r, c, stepsAt(r, c));
+});
+
+table.addEventListener('focusout', (e) => {
+  if (table.contains(e.relatedTarget)) return;
+  clearHover();
+  readout.innerHTML = HOVER_HINT;
+});
+
+const STEP = {
+  ArrowUp: [-1, 0],
+  ArrowDown: [1, 0],
+  ArrowLeft: [0, -1],
+  ArrowRight: [0, 1],
+};
+
+table.addEventListener('keydown', (e) => {
+  const cell = e.target.closest('td[data-r]');
+  if (!cell) return;
+  const r = +cell.dataset.r;
+  const c = +cell.dataset.c;
+  const clamp = (v) => Math.max(0, Math.min(N - 1, v));
+
+  if (e.key === 'Enter' || e.key === ' ') {
+    if (!COMPOSE) return;
+    e.preventDefault();
+    addFromCell(r, c);
+    cellAt(r, c)?.focus();
+    return;
+  }
+
+  let next = null;
+  if (STEP[e.key]) next = cellAt(clamp(r + STEP[e.key][0]), clamp(c + STEP[e.key][1]));
+  else if (e.key === 'Home') next = cellAt(e.ctrlKey ? 0 : r, 0);
+  else if (e.key === 'End') next = cellAt(e.ctrlKey ? N - 1 : r, N - 1);
+  if (next) {
+    e.preventDefault();
+    next.focus();
+  }
+});
+
 /* ---------- composing by clicking ---------- */
 function addFromCell(r, c) {
   if (!RUN) {
@@ -259,15 +326,17 @@ function setTip() {
 /* ---------- rendering a run ---------- */
 function stream(el, arr, labels) {
   el.innerHTML = arr
-    .map((v, n) => '<b data-n="' + n + '">' + (labels ? labels[n] : chr(v)) + '</b>')
+    .map((v, n) => '<b tabindex="0" data-n="' + n + '">' + (labels ? labels[n] : chr(v)) + '</b>')
     .join('');
-  el.querySelectorAll('b').forEach((b) =>
-    b.addEventListener('mouseenter', () => {
+  el.querySelectorAll('b').forEach((b) => {
+    const show = () => {
       if (!RUN) return;
       const st = RUN.steps[+b.dataset.n];
       light(st.row, st.col, stepsAt(st.row, st.col));
-    })
-  );
+    };
+    b.addEventListener('mouseenter', show);
+    b.addEventListener('focus', show);
+  });
 }
 
 function setLegend() {

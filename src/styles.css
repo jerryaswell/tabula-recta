@@ -485,6 +485,14 @@ body.composing td:hover {
   outline: 2px solid var(--ink);
   outline-offset: 1px;
 }
+/* inside the grid the ring goes within the square, and above the sticky headers
+   so a focused square scrolled under them is still visible */
+#grid td:focus-visible,
+.stream code b:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+  z-index: 4;
+}
 
 @media (max-width: 560px) {
   .result {

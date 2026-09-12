@@ -265,3 +265,45 @@ test('what changes on the page is announced', async ({ page }) => {
   }
   await expect(page.locator('#rnote')).toHaveAttribute('aria-live', 'polite');
 });
+
+test('the table can be walked and composed from the keyboard', async ({ page }) => {
+  await page.getByRole('button', { name: 'Clear both' }).click(); // empties, turns composing on
+  await page.locator('#picks button').nth(1).click(); // repeating keyword
+
+  await page.locator('#grid td[data-r="0"][data-c="0"]').focus();
+  const where = () =>
+    page.evaluate(() => {
+      const el = document.activeElement;
+      return el.dataset ? el.dataset.r + ',' + el.dataset.c : null;
+    });
+  expect(await where()).toBe('0,0');
+
+  // arrows move one square, and the working follows focus
+  for (let i = 0; i < 11; i++) await page.keyboard.press('ArrowDown');
+  expect(await where()).toBe('11,0');
+  await expect(page.locator('#readout')).toContainText('message');
+  await expect(page.locator('#grid td.at')).toHaveCount(1);
+
+  await page.keyboard.press('Enter'); // adds A and L
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('ArrowUp');
+  await page.keyboard.press('Enter'); // row K, column B
+  await expect(page.locator('#msg')).toHaveValue('AB');
+  await expect(page.locator('#key')).toHaveValue('LK');
+
+  // the grid is one tab stop, not 676
+  const stops = await page.evaluate(
+    () => document.querySelectorAll('#grid td[tabindex="0"]').length
+  );
+  expect(stops).toBe(1);
+
+  await page.keyboard.press('Home');
+  expect(await where()).toBe('10,0');
+});
+
+test('a letter of the message can be read without a mouse', async ({ page }) => {
+  await page.getByRole('button', { name: 'Repeating keyword' }).click();
+  await page.locator('#rplain b').nth(2).focus();
+  await expect(page.locator('#readout')).toContainText('letters 3, 8 of the message');
+  await expect(page.locator('#grid td.at')).toHaveCount(1);
+});
