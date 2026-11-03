@@ -29,7 +29,7 @@ sits on which edge, and where the key comes from.
 
 ## Working on it
 
-Node 20 or newer (the version in `.nvmrc` is what CI uses).
+Node 24 or newer (the version in `.nvmrc` is what CI uses).
 
 ```sh
 npm install
@@ -86,7 +86,7 @@ instead, which does everything but publish.
 The repository needs Pages pointed at the workflow once, under **Settings → Pages → Build and
 deployment → Source: GitHub Actions**.
 
-Asset paths in the page are relative, so it serves correctly from the project subpath
-(`jerryaswell.github.io/tabula-recta/`) as well as from a domain root. To move it to a custom
-domain, add a `CNAME` file containing the bare hostname to `public/` — it is copied into the site
-like everything else there — and set the domain under **Settings → Pages → Custom domain**.
+The site is served at the custom domain `tabula-recta.com`. `public/CNAME` holds the bare hostname
+and is copied into the site like everything else in `public/`, and the domain is set under
+**Settings → Pages → Custom domain**. Asset paths in the page are relative, so it serves correctly
+from a domain root and from the project subpath (`jerryaswell.github.io/tabula-recta/`) alike.
