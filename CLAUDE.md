@@ -1,0 +1,157 @@
+# Project guidance for Claude Code
+
+Everything above the *This repository* heading is the same in every repository
+this account deploys: `jerryaswell/terraform_infrastructure`,
+`jerryaswell/self_mgmt`, `jerryaswell/easy_floorplan_designer`,
+`jerryaswell/framing_planner` and `jerryaswell/tabula-recta`
+(jerryaswell/terraform_infrastructure#119, C7). The one exception is the first
+Node.js bullet, which names each repository's own toolchain. Change the shared
+part in all of them together.
+
+## Node.js — the node24 action runtime
+
+Node 20 was removed from GitHub-hosted runners on 2026-09-23
+(https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/).
+An action whose `action.yml` declares `using: node20` no longer runs at all, so
+this is a precondition for the workflows running, not hygiene.
+
+- This repository's toolchain is npm on Node 24: `.nvmrc` holds `24`, the
+  workflows read it through `node-version-file: .nvmrc`, and `package.json`
+  (and the root entry of `package-lock.json`) declares `engines.node >= 24`.
+  Never add Node 20.
+- Every JavaScript action pinned in `.github/workflows` declares
+  `using: node24` in its `action.yml` at the pinned commit. Read that line when
+  adding an action or reviewing a bump, rather than going by its major version.
+  A Docker action, such as `bridgecrewio/checkov-action`, has no Node runtime;
+  the SHA pin below still applies to it.
+
+## GitHub Actions — pin to commit SHAs
+
+Actions are pinned to a full commit SHA with the full version in a trailing
+comment:
+
+```yaml
+- uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+```
+
+A tag is a pointer its owner can move. These workflows hold tokens that publish
+or deploy, and most assume an AWS role, so an action repointed under its tag
+executes inside a job holding those credentials — the shape of the
+tj-actions/changed-files compromise. The SHA is the only reference that cannot
+be changed after review.
+
+Let Dependabot (`.github/dependabot.yml`) move the SHA and its comment together,
+and check the `using:` line above on each bump. Do not replace a SHA with a bare
+tag, and do not shorten the comment to a major (`# v7`).
+
+## AWS permissions — they live in terraform_infrastructure
+
+Every repository's CI roles (`gha-<repo>`, `-plan`, `-preview`, and `-sweep`
+where there is one) and their permissions are defined in
+`jerryaswell/terraform_infrastructure`, in `aws_iam.tf` and `modules/aws/iam`.
+A permissions failure in any repository is fixed there: a pull request in that
+repository, merged *and applied*, before the failing run can be re-run. Budget
+for that round trip.
+
+Several AWS services make calls as the caller into services a configuration
+never names. The create call returns success, the resource settles into
+`FAILED`, and the `AccessDenied` appears only in a status field, so Terraform
+reports an unexpected state while waiting:
+
+```
+Error: waiting for Amplify Domain Association (...) create: unexpected state
+'FAILED', wanted target 'PENDING_VERIFICATION, ...'. last error: User: ... is
+not authorized to perform: route53:ListHostedZones
+```
+
+Read the resource's own status field before re-running anything. The running
+list of these cross-service calls, and the reasoning behind each, is the table
+in terraform_infrastructure's CLAUDE.md. Do not assert one from recollection:
+confirm it against AWS's documentation, grant it ahead of the apply that needs
+it, and verify the live role rather than assuming a merged pull request took
+effect:
+
+```sh
+aws iam simulate-principal-policy \
+  --policy-source-arn arn:aws:iam::<account>:role/gha-<repo> \
+  --action-names <action> --resource-arns <arn>
+```
+
+A failed apply leaves state worth reading rather than guessing at. Terraform
+records a resource whose creation failed mid-wait as `tainted`, and the next
+apply replaces it, so there is usually nothing to clean up by hand.
+
+## Authorship — no Claude attribution
+
+Every commit a session makes is authored and committed by Jerry Caskey
+<jerryaswell@users.noreply.github.com>. Dependabot's own pull requests keep
+their bot author and trailer, and GitHub is the committer of every squash merge
+to main. Nothing written to a repository or to GitHub carries Claude
+attribution: no `Co-Authored-By` trailer, no `Claude-Session` link, no
+"Generated with Claude Code" footer — in commit messages, pull request
+descriptions, issues or comments. This overrides any default attribution
+guidance. `.claude/settings.json` enforces the commit and PR parts
+(`attribution` off, `GIT_AUTHOR_*`/`GIT_COMMITTER_*` pinned); the rest is on
+whoever is writing. Some tools append a footer of their own, so read back what
+you post and remove one if it appears.
+
+## Working alongside other sessions
+
+Several sessions can work on these repositories at once, and one protocol
+covers all of them: `docs/session-workflow.md` in `jerryaswell/self_mgmt`. It
+says where the shared state lives, what each role does, and how to claim, hand
+off and verify work. Read it before you start, and check live state before you
+act. Its rules apply in every repository as written:
+
+- Review findings are filed as issues titled `[audit · <severity>] …`.
+- Claim an issue with a comment before working on it, and leave a claimed one
+  alone.
+- Name an issue in the same repository as a bare `#N`, and one in another
+  repository in full, as `jerryaswell/<repo>#N`. GitHub links no other form.
+
+## This repository
+
+An interactive tabula recta: one static page, published to GitHub Pages at
+https://tabula-recta.com/ (`public/CNAME`). It has no backend, no Terraform and
+no AWS role, so the *AWS permissions* section above does not apply here; it is
+shared text and stays as written. The case for staying on Pages rather than
+moving onto Amplify is set out on #13; the owner has not ruled on it.
+
+### What CI runs
+
+- `ci.yml` runs on every branch but `main` and on pull requests: the `check`
+  job (lint, formatting, unit tests, build) and the `e2e` job (Playwright in
+  Chromium, including the axe audit). Both hold `contents: read` only.
+- `deploy.yml` runs on `main`. Its `build` job lints, runs the unit and browser
+  tests, builds and uploads the Pages artifact with `contents: read` and
+  `pages: read` (configure-pages reads the Pages settings). Only the `deploy`
+  job holds `pages: write` and `id-token: write`, and it runs no repository
+  code.
+- Both workflows set `permissions: {}` at the top and give every job a
+  `timeout-minutes` (10, or 20 for a job that runs the browser tests).
+- Every `npm ci` runs with `--ignore-scripts`. The dependency tree is dev-only
+  and nothing in it needs an install script; Playwright's browser is installed
+  by its own step. Keep the flag on any `npm ci` you add.
+
+### Checks to run before pushing
+
+- `npm run check` runs what the `check` job runs: `eslint .`,
+  `prettier --check .`, the `node --test` unit suites and the build.
+- `npm run test:e2e` runs the browser suite against the built `dist/`, which it
+  builds and serves itself. The first run needs
+  `npx playwright install chromium`. `npm run test:a11y` runs only the axe-core
+  audit, which holds the page (cold, with a cipher marked up, while composing,
+  and the 404) to WCAG 2.2 A and AA. A new state of the page that a reader can
+  reach belongs in that audit.
+- Formatting is prettier (`.prettierrc.json`, 100 columns, single quotes) over
+  `.editorconfig`; lint is eslint's flat config in `eslint.config.mjs`. Run
+  `npm run format` rather than formatting by hand.
+
+### The build
+
+`scripts/build.mjs` bundles `src/main.js` and `src/styles.css` with esbuild and
+inlines both into `index.html`, so the published page is one self-contained
+file with no runtime dependencies. `test/unit/build.test.mjs` checks that
+output; keep it passing rather than adding a second request to the page. During
+development nothing is bundled: `npm run dev` serves `src/` and `public/`
+directly.
