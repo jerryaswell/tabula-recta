@@ -44,6 +44,26 @@ Let Dependabot (`.github/dependabot.yml`) move the SHA and its comment together,
 and check the `using:` line above on each bump. Do not replace a SHA with a bare
 tag, and do not shorten the comment to a major (`# v7`).
 
+## GitHub Actions: on dispatch only
+
+No workflow starts on its own. Every file in `.github/workflows` has
+`workflow_dispatch` as its only trigger: no `push`, `pull_request`,
+`schedule`, `workflow_run` or any other event that starts a run unasked. The
+account's Actions minutes are limited, so the owner decides when a run is
+worth them: several commits can land on the default branch, and one
+dispatched run then checks and ships them together.
+
+- Never add another trigger, to an existing workflow or a new one.
+- Dispatched on the default branch, a workflow does what a push there used to
+  do, the apply or the deploy included. Dispatched on any other branch, it
+  runs the checks, and the plan where there is one, and changes nothing live.
+- A plan goes to the run's job summary, not to a pull request comment.
+- Dispatch a run only when the owner asks for one. Otherwise run the
+  repository's checks locally, and say in the pull request what you ran.
+- A run is dispatched from the workflow's page in the Actions tab (Run
+  workflow, then the branch), or through the REST API's workflow dispatch
+  endpoint.
+
 ## AWS permissions — they live in terraform_infrastructure
 
 Every repository's CI roles (`gha-<repo>`, `-plan`, `-preview`, and `-sweep`
@@ -119,14 +139,17 @@ moving onto Amplify is set out on #13; the owner has not ruled on it.
 
 ### What CI runs
 
-- `ci.yml` runs on every branch but `main` and on pull requests: the `check`
-  job (lint, formatting, unit tests, build) and the `e2e` job (Playwright in
-  Chromium, including the axe audit). Both hold `contents: read` only.
-- `deploy.yml` runs on `main`. Its `build` job lints, runs the unit and browser
-  tests, builds and uploads the Pages artifact with `contents: read` and
-  `pages: read` (configure-pages reads the Pages settings). Only the `deploy`
-  job holds `pages: write` and `id-token: write`, and it runs no repository
-  code.
+Both workflows run only when dispatched (see *GitHub Actions: on dispatch
+only* above).
+
+- `ci.yml`, dispatched on any branch, runs the `check` job (lint, formatting,
+  unit tests, build) and the `e2e` job (Playwright in Chromium, including the
+  axe audit). Both hold `contents: read` only.
+- `deploy.yml` is the one that publishes. Its `build` job lints, runs the unit
+  and browser tests, builds and uploads the Pages artifact with
+  `contents: read` and `pages: read` (configure-pages reads the Pages
+  settings). Only the `deploy` job holds `pages: write` and `id-token: write`,
+  it runs no repository code, and it runs only for a dispatch on `main`.
 - Both workflows set `permissions: {}` at the top and give every job a
   `timeout-minutes` (10, or 20 for a job that runs the browser tests).
 - Every `npm ci` runs with `--ignore-scripts`. The dependency tree is dev-only

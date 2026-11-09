@@ -1,8 +1,10 @@
 name: Deploy
 
+# Only when dispatched. Several commits can land on main and one run then
+# tests and publishes them together; nothing runs on a push (CLAUDE.md,
+# "GitHub Actions: on dispatch only"). Dispatched on another branch, it tests
+# and builds that branch and publishes nothing.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 # nothing at workflow level; each job asks for what it uses, so the job that
@@ -58,6 +60,8 @@ jobs:
   deploy:
     name: Publish to GitHub Pages
     needs: build
+    # main only: a dispatch can name any branch, and only main is the site
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
