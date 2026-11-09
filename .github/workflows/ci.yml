@@ -1,9 +1,9 @@
 name: CI
 
+# Only when dispatched, on whichever branch is chosen: nothing here runs on a
+# push or a pull request, so a run spends Actions minutes only when someone
+# asks for it (CLAUDE.md, "GitHub Actions: on dispatch only").
 on:
-  push:
-    branches-ignore: [main]
-  pull_request:
   workflow_dispatch:
 
 # nothing at workflow level; each job asks for what it uses

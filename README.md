@@ -79,9 +79,11 @@ what you edit is what you see.
 
 ## Deployment
 
-Pushing to `main` runs `.github/workflows/deploy.yml`, which lints, tests, builds, and publishes
-`dist/` to GitHub Pages. Every other branch and every pull request runs `.github/workflows/ci.yml`
-instead, which does everything but publish.
+Nothing runs on a push or a pull request: both workflows run only when dispatched, from the
+workflow's page in the Actions tab (**Run workflow**). Several commits can land on `main` and one
+run of `.github/workflows/deploy.yml` then lints, tests, builds, and publishes `dist/` to GitHub
+Pages; dispatched on any other branch, it stops before publishing. `.github/workflows/ci.yml`,
+dispatched on any branch, does everything but publish.
 
 The repository needs Pages pointed at the workflow once, under **Settings → Pages → Build and
 deployment → Source: GitHub Actions**.
