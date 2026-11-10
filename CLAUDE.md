@@ -112,8 +112,10 @@ attribution: no `Co-Authored-By` trailer, no `Claude-Session` link, no
 descriptions, issues or comments. This overrides any default attribution
 guidance. `.claude/settings.json` enforces the commit and PR parts
 (`attribution` off, `GIT_AUTHOR_*`/`GIT_COMMITTER_*` pinned); the rest is on
-whoever is writing. Some tools append a footer of their own, so read back what
-you post and remove one if it appears.
+whoever is writing. Some tools append a footer of their own to every comment
+and review, and a session cannot take it off again, so a session writes none:
+its records go in issue bodies and pull request descriptions. Read back what
+you post there, and remove a footer if one appears.
 
 ## Working alongside other sessions
 
@@ -124,7 +126,9 @@ off and verify work. Read it before you start, and check live state before you
 act. Its rules apply in every repository as written:
 
 - Review findings are filed as issues titled `[audit · <severity>] …`.
-- Claim an issue with a comment before working on it, and leave a claimed one
+- Write no comment and no review. A record goes in the issue's body, under a
+  `## Records` heading, or in the pull request's description.
+- Claim an issue in its body before working on it, and leave a claimed one
   alone.
 - Name an issue in the same repository as a bare `#N`, and one in another
   repository in full, as `jerryaswell/<repo>#N`. GitHub links no other form.
