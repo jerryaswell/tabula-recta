@@ -115,7 +115,8 @@ guidance. `.claude/settings.json` enforces the commit and PR parts
 whoever is writing. Some tools append a footer of their own to every comment
 and review, and a session cannot take it off again, so a session writes none:
 its records go in issue bodies and pull request descriptions. Read back what
-you post there, and remove a footer if one appears.
+you post there: a new pull request's description can come back with a footer
+and a session link, and an edit does remove those.
 
 ## Working alongside other sessions
 
