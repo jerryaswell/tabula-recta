@@ -132,8 +132,9 @@ act. Its rules apply in every repository as written:
   (`claimed`, `blocked`, `needs-second-look`, `needs-verification`,
   `verified`), and its detail is in the pull request's description. The owner
   carries the hand-off from one session to the next: nothing is written to
-  GitHub for it, and no claim, status or verification goes into an issue's
-  body.
+  GitHub for it, and no claim or status goes into an issue's body. The one
+  body record is the dated closing paragraph of an issue closed without a
+  merge, with its verification, as `docs/session-workflow.md` says.
 - Add `claimed` to an issue before working on it, and leave an issue another
   session has claimed alone. `claimed` comes off when the pull request that
   closes the issue merges, or when the session gives the work up.
