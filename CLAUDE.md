@@ -112,11 +112,11 @@ attribution: no `Co-Authored-By` trailer, no `Claude-Session` link, no
 descriptions, issues or comments. This overrides any default attribution
 guidance. `.claude/settings.json` enforces the commit and PR parts
 (`attribution` off, `GIT_AUTHOR_*`/`GIT_COMMITTER_*` pinned); the rest is on
-whoever is writing. Some tools append a footer of their own to every comment
-and review, and a session cannot take it off again, so a session writes none:
-its records go in issue bodies and pull request descriptions. Read back what
-you post there: a new pull request's description can come back with a footer
-and a session link, and an edit does remove those.
+whoever is writing. Some tools add a footer of their own to every comment and
+review, and a session cannot take it off again, so a session posts no comment
+and no review. A new pull request's description can come back with a footer
+and a session link: read it back after opening it, and edit them out, which
+does remove them.
 
 ## Working alongside other sessions
 
@@ -127,10 +127,13 @@ off and verify work. Read it before you start, and check live state before you
 act. Its rules apply in every repository as written:
 
 - Review findings are filed as issues titled `[audit · <severity>] …`.
-- Write no comment and no review. A record goes in the issue's body, under a
-  `## Records` heading, or in the pull request's description.
-- Claim an issue in its body before working on it, and leave a claimed one
-  alone.
+- Post no comment and no review, on an issue or a pull request. The state of a
+  piece of work is a label (`claimed`, `blocked`, `needs-second-look`,
+  `needs-verification`, `verified`), its detail is in the pull request's
+  description, and the owner carries the hand-off from one session to the
+  next.
+- Add `claimed` to an issue before working on it, and leave an issue that has
+  it alone. Change one label at a time and keep the others.
 - Name an issue in the same repository as a bare `#N`, and one in another
   repository in full, as `jerryaswell/<repo>#N`. GitHub links no other form.
 
