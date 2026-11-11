@@ -127,13 +127,19 @@ off and verify work. Read it before you start, and check live state before you
 act. Its rules apply in every repository as written:
 
 - Review findings are filed as issues titled `[audit · <severity>] …`.
-- Post no comment and no review, on an issue or a pull request. The state of a
-  piece of work is a label (`claimed`, `blocked`, `needs-second-look`,
-  `needs-verification`, `verified`), its detail is in the pull request's
-  description, and the owner carries the hand-off from one session to the
-  next.
-- Add `claimed` to an issue before working on it, and leave an issue that has
-  it alone. Change one label at a time and keep the others.
+- Post no comment and no review, on an issue or a pull request, in any
+  repository on this account. The state of a piece of work is a label
+  (`claimed`, `blocked`, `needs-second-look`, `needs-verification`,
+  `verified`), and its detail is in the pull request's description. The owner
+  carries the hand-off from one session to the next: nothing is written to
+  GitHub for it, and no claim, status or verification goes into an issue's
+  body.
+- Add `claimed` to an issue before working on it, and leave an issue another
+  session has claimed alone. `claimed` comes off when the pull request that
+  closes the issue merges, or when the session gives the work up.
+- Change one label at a time and keep the others. The GitHub tool sets an
+  issue's whole label list, so read the labels just before a change and send
+  back the same list with only that change.
 - Name an issue in the same repository as a bare `#N`, and one in another
   repository in full, as `jerryaswell/<repo>#N`. GitHub links no other form.
 
