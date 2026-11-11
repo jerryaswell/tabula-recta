@@ -112,8 +112,11 @@ attribution: no `Co-Authored-By` trailer, no `Claude-Session` link, no
 descriptions, issues or comments. This overrides any default attribution
 guidance. `.claude/settings.json` enforces the commit and PR parts
 (`attribution` off, `GIT_AUTHOR_*`/`GIT_COMMITTER_*` pinned); the rest is on
-whoever is writing. Some tools append a footer of their own, so read back what
-you post and remove one if it appears.
+whoever is writing. Some tools add a footer of their own to every comment and
+review, and a session cannot take it off again, so a session posts no comment
+and no review. A new pull request's description can come back with a footer
+and a session link: read it back after opening it, and edit them out, which
+does remove them.
 
 ## Working alongside other sessions
 
@@ -124,8 +127,20 @@ off and verify work. Read it before you start, and check live state before you
 act. Its rules apply in every repository as written:
 
 - Review findings are filed as issues titled `[audit · <severity>] …`.
-- Claim an issue with a comment before working on it, and leave a claimed one
-  alone.
+- Post no comment and no review, on an issue or a pull request, in any
+  repository on this account. The state of a piece of work is a label
+  (`claimed`, `blocked`, `needs-second-look`, `needs-verification`,
+  `verified`), and its detail is in the pull request's description. The owner
+  carries the hand-off from one session to the next: nothing is written to
+  GitHub for it, and no claim or status goes into an issue's body. The one
+  body record is the dated closing paragraph of an issue closed without a
+  merge, with its verification, as `docs/session-workflow.md` says.
+- Add `claimed` to an issue before working on it, and leave an issue another
+  session has claimed alone. `claimed` comes off when the pull request that
+  closes the issue merges, or when the session gives the work up.
+- Change one label at a time and keep the others. The GitHub tool sets an
+  issue's whole label list, so read the labels just before a change and send
+  back the same list with only that change.
 - Name an issue in the same repository as a bare `#N`, and one in another
   repository in full, as `jerryaswell/<repo>#N`. GitHub links no other form.
 
